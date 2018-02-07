@@ -1,10 +1,10 @@
-% kcIM_Experiment_2018
+% - - - - - - - - - - - - - - - - - - - - -
+%          kcIM_Experiment_2018_Clean
+% - - - - - - - - - - - - - - - - - - - - -
 
 % !!! ALERTS BEFORE TESTING !!!
-% change back to using Theta! now's set to [1 1 0] etc.
-% cd to the right folder! Or else it'll try to create KCIM_Data in a random
-% place.
 
+% Make sure coding=0; runningonVP=1;
 % Display flickering gabor patch and requires user to fixate centrally.
 % Central 2 degrees replaced by grey gauss blob.
 % Saves out:
@@ -20,36 +20,45 @@
 clear;
 close all;
 
-cd('/Users/miaomiaoyu/GoogleDrive/Matlab_Toolboxes/Projects/Koniocellular');
+coding=1;
+% - When coding: -
+% You skip screen tests.
+% You run through 1 block/rep of all conditions.
+% Each condition is only 3 secs.
+% You don't send any triggers.
 
-% - - - - - - - - - - - - - - - - - - - - -
-%    Screen Tests: skipped when coding
-% - - - - - - - - - - - - - - - - - - - - -
-
-coding=0;
 if coding
-   % Screen('Preference', 'SkipSyncTests', 1);
-    %PsychDebugWindowConfiguration();
+    Screen('Preference', 'SkipSyncTests', 1);
+    nReps = 1;
+    blockDurationSec = 3;
+    isi = 0.5;
+else
+    nReps = 15;
+    blockDurationSec = 12;
+    isi = 1;
 end
 
 runningonVP=0;
+
 if runningonVP
+    % - Running on VP -
+    cd('/Users/tyrion/Documents/MATLAB/Miaomiao/KoniocellularEEG');
     params=displayParamsVP;
 else
+    % - Running on Eleanore-Rose -
+    cd('/Users/miaomiaoyu/GoogleDrive/Matlab_Toolboxes/Projects/Koniocellular');
     params=displayParamsMac;
 end
 
-PPD=mmy_calculatePPD(params.distance, params.dimensions(2), ...
+PPD=mmy_Calculate_PPD(params.distance, params.dimensions(2), ...
     params.numPixels(2));
 
 % - - - - - - - - - - - - - - - - - - - - -
 %          Initial Parameters
 % - - - - - - - - - - - - - - - - - - - - -
 
-W=what; exptPath=strcat(W.path,'/'); clear W;
-
-if ~exist ([exptPath, 'KCIM_Data'], 'file')
-    mkdir ([exptPath, 'KCIM_Data']);   % make sure you have somewhere to save data onto.
+if ~exist ([pwd, '/KCIM_Data'], 'file')
+    mkdir ([pwd, '/KCIM_Data']);   % Make sure there's a place you can save your data
 end
 
 % subject ID input by user
@@ -58,7 +67,7 @@ options.Resize='off';
 options.WindowStyle='normal';
 options.Interpreter='none';
 subjInfo=inputdlg(prompt, dlgTitle, 1, {'', ''}, options);
-fName=[exptPath, 'data/SConeFlicker_S', subjInfo{1}, subjInfo{2} ...
+fName=[pwd, '/KCIM_Data/SConeFlicker_S', subjInfo{1}, '_', subjInfo{2} ...    % make this into Practice_Data for when you're coding
     '_', datestr(now,'dd-mm-yyyy_HHMMSS')];
 
 [~, CompName] = system('hostname');
@@ -73,52 +82,40 @@ rect=Screen('Rect', screenNumber); % get the screen resolution.
 centreX=rect(3)/2;
 centreY=rect(4)/2;
 refreshRateHz=Screen('NominalFrameRate', screenNumber); % 120 on ViewPixx
-
+refreshRateHz=180;
 % - - - - - - - - - - - - - - - - - - - -
 %    Stimulus Parameters: Gabor Patch
 % - - - - - - - - - - - - - - - - - - - -
 
-    contrast=1; % Property matrix
-    aspectRatio=1;
-    nCycles=20;
-    orientation=90;
-    backgroundOffset=[0 0 0 0];
-    disableNorm=1;
-    contrastPreMultiplicator=1;
-    
-    gaborDeg=17; % Gabor stimulus
-    gaborDimPix=round(PPD * gaborDeg);
-    gaborSigma=gaborDimPix/8;
-    gaborSf=nCycles/gaborDimPix;
+G.contrast=1;
+G.aspectRatio=1;
+G.orientation=90;
+G.backgroundOffset=[0 0 0 0];
+G.disableNorm=1;
+G.contrastPreMultiplicator=1;
+G.gaborDeg=35;
+G.gaborDimPix=round(PPD * G.gaborDeg);
+G.nCycles=G.gaborDimPix / 10;
+G.gaborSigma=G.gaborDimPix/7;
+G.gaborSf=G.nCycles/G.gaborDimPix;
 
+% Load the Stockman/Sharpe 10 deg cone fundamentals:
+load('StockmanSharpe_10deg_cone_fundamentals_1nm.mat');
 
-deg2 = 1;
+gray=GrayIndex(screenNumber);
+sizeOfSquare=2 * PPD; % pretty sure this corresponds to size in pixels...
+sizeOfBlob=100; % this is arbitrary, i think. it does make the blob smaller, but not by much.
+transLayer=2;
+blobSigma=700;
+[x,y]=meshgrid(-sizeOfSquare:sizeOfSquare, -sizeOfSquare:sizeOfSquare);
+greyBlob=uint8(ones(2*sizeOfSquare+1, 2*sizeOfSquare+1, transLayer) * gray);
+size(greyBlob);
 
-
-    % Load the Stockman/Sharpe 10 deg cone fundamentals:
-    load('StockmanSharpe_2deg_cone_fundamentals_1nm.mat');
-    
-
-    
-    % Load the Stockman/Sharpe 10 deg cone fundamentals:
-    load('StockmanSharpe_10deg_cone_fundamentals_1nm.mat');
-    
-    gray=GrayIndex(screenNumber);
-    sizeOfSquare=2 * PPD; % pretty sure this corresponds to size in pixels...
-    sizeOfBlob=100; % this is arbitrary, i think. it does make the blob smaller, but not by much.
-    transLayer=2;
-    blobSigma=1200;
-    [x,y]=meshgrid(-sizeOfSquare:sizeOfSquare, -sizeOfSquare:sizeOfSquare);
-    maskBlob=uint8(ones(2*sizeOfSquare+1, 2*sizeOfSquare+1, transLayer) * gray);
-    size(maskBlob);
-    
-    % Layer 2 (Transparency aka Alpha) is filled with gaussian transparency
-    % mask.
-    xsd=sizeOfSquare/2.0;
-    ysd=sizeOfSquare/2.0;
-    maskBlob(:,:,transLayer)=uint8(round(-sizeOfBlob + exp(-((x/xsd).^2)-((y/ysd).^2))* blobSigma));
-    
-
+% Layer 2 (Transparency aka Alpha) is filled with gaussian transparency
+% mask.
+xsd=sizeOfSquare/2.0;
+ysd=sizeOfSquare/2.0;
+greyBlob(:,:,transLayer)=uint8(round(-sizeOfBlob + exp(-((x/xsd).^2)-((y/ysd).^2))* blobSigma));
 
 % - - - - - - - - - - - - - - - - - - - -
 %          Fixation Parameters
@@ -126,22 +123,7 @@ deg2 = 1;
 % Set up the fixation cross or spot:
 % This is drawn directly to the screen using Screen('FillRect')
 % if you're using a cross instead:
-fCross=fixation_cross(2, 10, centreX, centreY);
-
-ringRadius = rect(4) / 2; % outer edge (radius) of the ring: the edge of the screen
-ringWidth = ringRadius - PPD / 3; % 1/3 of a degree thick
-
-% Make the ring. It's in a 2*2 checkerboard pattern:
-fixationRing=double(checkerboard(ringRadius, 1) > 0.5);
-imSize=rect(4); % making this the same size as the page
-
-% Define the ring:
-xx=(1 - imSize) / 2:(imSize - 1) / 2;
-[xx, yy]=meshgrid(xx, xx);
-[~, r]=cart2pol(xx, yy);
-
-% make the alpha mask for the ring.
-ringAlpha=((r > ringWidth + 1) & (r < ringRadius - 1));
+fCross = fixation_cross(2, 10, centreX, centreY);
 
 % - - - - - - - - - - - - - - - - - - - -
 %        Stimulus Parameters: DKL
@@ -152,12 +134,9 @@ ringAlpha=((r > ringWidth + 1) & (r < ringRadius - 1));
 % This contains resampledSpectra which is needed in defining colorMod.
 load('Viewpixx_Processed_cal_data_2_4_2016.mat');
 
-% Load the Stockman/Sharpe 10 deg cone fundamentals:
-load('StockmanSharpe_10deg_cone_fundamentals_1nm.mat');
-
 % Load in the subject's mean thetas
-thetaSConeFile = fullfile([exptPath, 'KCIM_Isoluminance/S', subjInfo{1}, '_thetaVals_S.mat']);
-thetaLMFile = fullfile([exptPath, 'KCIM_Isoluminance/S', subjInfo{1}, '_thetaVals_L-M.mat']);
+thetaSConeFile = fullfile([pwd, '/KCIM_Isoluminance/S', subjInfo{1}, '_thetaVals_S.mat']);
+thetaLMFile = fullfile([pwd, '/KCIM_Isoluminance/S', subjInfo{1}, '_thetaVals_L-M.mat']);
 
 if ~exist( thetaSConeFile, 'file' ) || ~exist ( thetaLMFile, 'file' ) % Check that these files exist.
     disp('ERROR: Cannot locate subject''s isoluminance theta value.');
@@ -178,27 +157,30 @@ end
 
 lum.name = 'Lum';
 lum.dir = [1 1 1];
-lum.scale = .60;
+lum.scale = .729;
 lum.trig = 5; % 7, 3, 11
 
-SCone.name = 'SCone';
-SCone.dir = [0 0 1]; %[cos(meanThetaSCone)/sqrt(2), cos(meanThetaSCone)/sqrt(2), sin(meanThetaSCone)];
-SCone.scale = .60;
-SCone.trig = 7;
+sCone.name = 'SCone';
+sCone.dir = [cos(meanThetaSCone)/sqrt(2), cos(meanThetaSCone)/sqrt(2), sin(meanThetaSCone)]; % [0 0 1]
+sCone.scale = .729;
+sCone.trig = 7;
 
 lm.name = 'LM';
-lm.dir = [1 -1 0]; %[cos(meanThetaLM), sin(meanThetaLM), 0];
-lm.scale = .10;
+lm.dir = [cos(meanThetaLM), sin(meanThetaLM), 0];  % [1 -2 0]
+lm.scale = .232;
 lm.trig = 11;
 
-stimLMS = {lum; SCone; lm};
+
+stimLMS = {lum; sCone; lm};
 nColor = length(stimLMS);
 
 % --- Temporal Levels ---
 
 stimFreq = [5, 12, 16]; % flicker rates of gabor patch
+
 nFreq = length(stimFreq);
 
+crossColorMat = {[1 1 1], [0 0 0]};
 % - - - - - - - - - - - - - - - - - - - -
 %          Create Conditions
 % - - - - - - - - - - - - - - - - - - - -
@@ -226,6 +208,7 @@ pauseCode = KbName('p');
 % - - - - - - - - - - - - - - - - - - - -
 %          Triggers
 % - - - - - - - - - - - - - - - - - - - -
+
 trigPause=22;
 trigUnpause=29;
 trigSec=1;
@@ -331,50 +314,23 @@ try % Start a try/catch statement, in case something goes awry with the PTB func
     
     Screen('BlendFunction', w, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); % ==> definitely need this!!!
     
-    
     % - - - - - - - - - - - - - - - - - - - -
     %         Generating Textures
     % - - - - - - - - - - - - - - - - - - - -
     
-    % 1. Gabor and Blob
-    gaborTex=CreateProceduralGabor(w, gaborDimPix, gaborDimPix, [],...
-        backgroundOffset, disableNorm, contrastPreMultiplicator);
+    gaborTexture=CreateProceduralGabor(w, G.gaborDimPix, G.gaborDimPix, [],...
+        G.backgroundOffset, G.disableNorm, G.contrastPreMultiplicator);
     
-    
-    gcDimPix= 100;
-    
-    
-    gaborTexC=CreateProceduralGabor(w, gcDimPix, gcDimPix, [],...
-        backgroundOffset, disableNorm, contrastPreMultiplicator);
-    
-    
-        
     % Build a single transparency mask texture
-    maskTex=Screen('MakeTexture', w, maskBlob);
-    
-    % 2. Fixation Ring
-    ringMat(:,:,1)=fixationRing;
-    ringMat(:,:,2)=ringAlpha;
-    
-    fRingTex=Screen('MakeTexture', w, ringMat, [], [], 2);
-    
+    greyBlobTexture=Screen('MakeTexture', w, greyBlob);
+
     % - - - - - - - - - - - - - - - - - - - -
     %          Experiment Parameters
     % - - - - - - - - - - - - - - - - - - - -
-    missedFrames=0;
+    
     quitExperiment=0;
     pauseExperiment=0;
     globalIndex=1;
-    
-    if coding
-        nReps=1;
-        blockDurationSec=3;
-        isi=0.5;
-    else
-        nReps=15;
-        blockDurationSec=12;
-        isi=1;
-    end
     
     % Query the screen refresh rate:
     ifi = Screen('GetFlipInterval', w); % Duration between screen flips (1 / refreshRateHz).
@@ -404,16 +360,32 @@ try % Start a try/catch statement, in case something goes awry with the PTB func
         
         KbWait;
         
+ % -------- F I X A T I O N  C R O S S  --------
+ 
+ for secondChunk = 1:5
+     crossColor = round(rand(1));
+     Screen('FillRect', w, crossColorMat{crossColor+1}, fCross);
+ end
+     
+
+                    
+        
         for repIndex=1:nReps
             
-            if mod(repIndex, 5)==0 % beep when you're 1/3 and 2/3 finished.
-                sound(sin(1:2:1200), 5000);
-            end
+            % -------- I M P R O V E --------
+%             
+%             
+%             if mod(repIndex, 2) == 0 % beep when you're 1/3 and 2/3 finished.
+%                 sound(sin(1:2:1200), 5000);
+%             end
             
-            displayIndex=randperm(nCond); % Gives a random order (since we can't randperm cells directly)
+            % -------- I M P R O V E --------
             
+            %displayIndex=randperm(nCond); % Gives a random order (since we can't randperm cells directly)
+            displayIndex=1:9;
             for condIndex=1:nCond
                 
+                missedFrames=0;
                 % Two things get set here : The color (in LMS) and the temporal
                 % frequency (from the array gaborFlickerRateHz).
                 % For each presentation of the stim, you want to work out how
@@ -422,8 +394,8 @@ try % Start a try/catch statement, in case something goes awry with the PTB func
                 % (set by the gaborFlickerRateHz).
                 
                 % First do the color
-                stimRGB=LMS2RGB_Vpixx(stimConditions{displayIndex(condIndex), 1}, fundamentals10deg, resampledSpectra);
-                colorMod=stimRGB.dir .* stimRGB.scale;
+                stimRGB = LMS2RGB_Vpixx(stimConditions{displayIndex(condIndex), 1}, fundamentals10deg, resampledSpectra);
+                colorMod = stimRGB.dir .* stimRGB.scale;
                 
                 % Now do the stim seq
                 framesPerStim=round(blockDurationSec / ifi); % 6s * 120frames/s = 720 frames
@@ -436,25 +408,23 @@ try % Start a try/catch statement, in case something goes awry with the PTB func
                 modWave(modWave<0)=0; % On/Off
                 
                 % Create a unique Condition Code
-                condCode=createCondCode(stimConditions{displayIndex(condIndex)}.trig, ...
-                    stimConditions{displayIndex(condIndex), 2});
+                condCode=mmy_Create_Cond_Code(stimConditions { displayIndex(condIndex) }.trig, ...
+                    stimConditions { displayIndex(condIndex), 2 } );
                 
-                disp(condCode);
-                
+                disp(condCode)
                 gaborPhase = rand(1) * 360; % Randomize the phase to avoid cone-level adaptation
                 % if the same part of the screen is always
                 % green/blue/black whatever you'll slowly
                 % come to expect it/adapt to it.
                 
-                stimStartTime = GetSecs;
                 
-                frameIndex=0;
+                
+                stimStartTime = GetSecs;
                 
                 if runningonVP   % TRIGGER!!! CONDCODE tiny bit BEFORE STIMULUS GOES UP
                     if frameIndex == 0
-                        Datapixx('SetDoutValues', transformindex(condCode)); % confirmed: sends out condCode a little while after stimulus presentation (1 sec lag
+                        Datapixx('SetDoutValues', transformindex(condCode)); 
                         Datapixx('RegWrRd');
-                        fprintf('\ncondition: %g', transformindex(condCode));
                     end
                 end
                 
@@ -465,11 +435,10 @@ try % Start a try/catch statement, in case something goes awry with the PTB func
                     % - - - - - - - - - - - - - - - - - - - -
                     %      KbCheck for Quit and Pause
                     % - - - - - - - - - - - - - - - - - - - -
-                    
+
                     [keyIsDown, secs, keyCode] = KbCheck; % keep checking for key presses
                     
-                    %if (keyCode~=0)
-                    if keyCode~=0
+                    if keyIsDown
                         
                         if keyCode(pauseCode)
                             
@@ -478,7 +447,6 @@ try % Start a try/catch statement, in case something goes awry with the PTB func
                             if runningonVP
                                 Datapixx('SetDoutValues', transformindex(trigPause));
                                 Datapixx('RegWrRd');
-                                % fprintf('\npause: %g', transformindex(trigPause));
                             end
                             
                             pause;
@@ -489,7 +457,6 @@ try % Start a try/catch statement, in case something goes awry with the PTB func
                             if runningonVP
                                 Datapixx('SetDoutValues', transformindex(trigUnpause));
                                 Datapixx('RegWrRd');
-                                % fprintf('\nunpause: %g', transformindex(trigUnpause));
                             end
                             
                         elseif keyCode(quitCode)
@@ -507,10 +474,11 @@ try % Start a try/catch statement, in case something goes awry with the PTB func
                             %            Save data out
                             % - - - - - - - - - - - - - - - - - - - -
                             
-                            kcIM_Data(1, :) = {'global index', 'rep index', 'cond index', 'display index',...
-                                'color', 'flicker', 'phase', 'isi start', 'isi end', 'isi duration',...
-                                'stim start', 'stim end', 'stim duration',...
-                                'missed frames', 'cond code'};
+                            
+                            kcIM_Data(1,:) = {'Global Index', 'Rep Index', 'Cond Index', 'Display Index',...
+                                'Color', 'Freq', 'Phase', 'ISI Start', 'ISI End', 'ISI Duration',...
+                                'Stim Start', 'Stim End', 'Stim Time',...
+                                'Missed Frames', 'Cond Code'};
                             
                             kcIM_Data(globalIndex+1, :) = {globalIndex, repIndex, condIndex, displayIndex(condIndex),...
                                 stimConditions{displayIndex(condIndex), 1}.name,...
@@ -526,10 +494,12 @@ try % Start a try/catch statement, in case something goes awry with the PTB func
                             return
                             
                         end
+                        
                     end % End check on keycode being down
+                    
                     if runningonVP
                         
-                        if mod(frameIndex, refreshRateHz) == 0 % confirmed: sends out trigger '1' at every second interval.
+                        if (mod(frameIndex, refreshRateHz) == 0) % confirmed: sends out trigger '1' at every second interval.
                             Datapixx('SetDoutValues', transformindex(trigSec));
                             Datapixx('RegWrRd');
                         end
@@ -540,50 +510,24 @@ try % Start a try/catch statement, in case something goes awry with the PTB func
                     %           Drawing Stimuli
                     % - - - - - - - - - - - - - - - - - - - -
                     
+                    gaborPropMat = [gaborPhase, G.gaborSf, G.gaborSigma, modWave(frameIndex), ...
+                        G.aspectRatio, [0 0 0]]';
                     
-                    % If you've drawn a blue blob (first stimulus), followed by a red blob
-                    % (second stimulus).
+                    % -------- P. Gabor --------
                     
-                    % If you put a 'BlendFunction' after another, it overrides it.
-                    
-                    % Screen('BlendFunction', w, GL_ONE, GL_ONE); % puts up white square
-                    % Screen('BlendFunction', w, GL_ZERO, GL_ONE) % puts up grey square
-                    % Screen('BlendFunction', w, GL_ZERO, GL_ZERO) % puts up black square
-                    % Screen('BlendFunction', w, GL_ONE, GL_ZERO) % red blob (second stimulus)
-                    % Screen('BlendFunction', w, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); % purplish blob but more towards red...
-                    % Screen('BlendFunction', w, GL_SRC_ALPHA, GL_ONE) % white square
-                    % Screen('BlendFunction', w, GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA); % very nicely blended purple blob
-                    % Screen('BlendFunction', w, GL_ONE, GL_ONE_MINUS_DST_ALPHA); % very nicely blended purple blob
-                    
-                    
-                    gaborPropMat = [gaborPhase, gaborSf, gaborSigma, modWave(frameIndex), ...
-                        aspectRatio, [0 0 0]]';
-                    
-                    Screen('DrawTexture', w, fRingTex);
                     Screen('BlendFunction', w, GL_ONE, GL_ONE);
                     
-                    Screen('DrawTexture', w, gaborTex, [], [], orientation, [], [], colorMod, [],...
+                    Screen('DrawTexture', w, gaborTexture, [], [], G.orientation, [], [], colorMod, [],...
                         kPsychDontDoRotation, gaborPropMat);
                     
+                    % -------- Grey Blob --------
                     
                     Screen('BlendFunction', w, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                    Screen('DrawTexture', w, maskTex);
                     
+                    Screen('DrawTexture', w, greyBlobTexture);
                     
-                    % -- Screen('BlendFunction', w, GL_ZERO, GL_ONE) % POTENTIALLY (but it seems to just be first)
-                    %  -- Screen('BlendFunction', w, GL_SRC_ALPHA, GL_ONE) %
-                    %  makes it look kind of criss cross
-                    
-                    
-                    %Screen('BlendFunction', w, GL_ONE, GL_ZERO);
-                    %Screen('BlendFunction', w, GL_SRC_ALPHA, GL_ONE)
-                    Screen('BlendFunction', w, GL_SRC_ALPHA, GL_ONE);
-                    Screen('DrawTexture', w, gaborTexC, [], [], 0, [], [], colorMod, [],...
-                        kPsychDontDoRotation, gaborPropMat);
-                    
-                    
-                    Screen('FillRect', w, [0 0 0], fCross);
-                    
+                    % -------- C. Gabor --------
+
                     Screen('DrawingFinished', w);
                     
                     % Update display on next refresh (& provide deadline)
@@ -595,21 +539,18 @@ try % Start a try/catch statement, in case something goes awry with the PTB func
                         missedTime(missedFrames)=GetSecs; % You should also log the start time. And I'm not sure that now is a good clock. PTB prob has a better one.
                     end
                     
-                    %% this bit was taken out but maybe look into keeping it in
-                    %                     for f=1:round(1/ifi) % no. of frames in 1 sec
-                    %                         if f < 3
-                    %                             if runningonVP
-                    %                             Datapixx('SetDoutValues', transformindex(0)); % isi
-                    %                             Datapixx('RegWrRd');
-                    %                            % fprintf('\n 3 %g', transformindex(0));
-                    %                             end
-                    %                         end
-                    %                     end    % I DON'T KNOW WHY I NEED THIS BUT I NEED IT
                     
-                    % is this the bit that without it 1 second triggers
-                    % won't run?
+                    if runningonVP
+                        
+                        if (mod(frameIndex, refreshRateHz) == 0) % confirmed: sends out trigger '0' after screen flip ponce a second
+                            Datapixx('SetDoutValues', 0);
+                            Datapixx('RegWrRd');
+                        end
+                        
+                    end
                     
                 end % End of displaying 1 stimulus (1 condition out of 9)
+                
                 % ******** END OF FAST LOOP *********
                 
                 stimEndTime=GetSecs;
@@ -631,7 +572,6 @@ try % Start a try/catch statement, in case something goes awry with the PTB func
                         if f < 3
                             Datapixx('SetDoutValues', transformindex(4)); % isi
                             Datapixx('RegWrRd');
-                            fprintf('\nfirst 3 frames of ISI: %g', transformindex(4));
                         end
                     end
                 end
@@ -643,10 +583,10 @@ try % Start a try/catch statement, in case something goes awry with the PTB func
                 %            Save data out
                 % - - - - - - - - - - - - - - - - - - - -
                 
-                kcIM_Data(1,:) = {'global index', 'rep index', 'cond index', 'display index',...
-                    'color', 'flicker', 'phase', 'isi start', 'isi end', 'isi duration',...
-                    'stim start', 'stim end', 'stim duration',...
-                    'missed frames', 'cond code'};
+                kcIM_Data(1,:) = {'Global Index', 'Rep Index', 'Cond Index', 'Display Index',...
+                    'Color', 'Freq', 'Phase', 'ISI Start', 'ISI End', 'ISI Duration',...
+                    'Stim Start', 'Stim End', 'Stim Time',...
+                    'Missed Frames', 'Cond Code'};
                 
                 kcIM_Data(globalIndex+1,:) = {globalIndex, repIndex, condIndex, displayIndex(condIndex),...
                     stimConditions{displayIndex(condIndex), 1}.name,...
@@ -706,6 +646,7 @@ catch
     ShowCursor();
     
 end % terminating the try/catch statement.
+
 sca;
 
 
