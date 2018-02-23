@@ -24,13 +24,12 @@ zscoreIndices = find(abs(zscoreData)>zscoreLimit);
 
 
 
-figure(500)
-subplot(2,1,1)
-plot(dataVector)
-title('Data Vector');
-subplot(2,1,2)
-plot(zscoreData); hold on;
-plot(zscoreIndices+1, 0, 'ro'); 
-title('Diff vector');
-hold off;
-end
+%figure(500)
+%subplot(2,1,1)
+%plot(dataVector)
+%title('Data Vector');
+%subplot(2,1,2)
+%plot(zscoreData); hold on;
+%plot(zscoreIndices+1, 0, 'ro'); 
+%title('Diff vector');
+%hold off;

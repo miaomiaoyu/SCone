@@ -20,12 +20,12 @@ thisComputer = computer;
 if strcmp(thisComputer, 'MACI64')
     curDir = ('/Users/miaomiaoyu/Documents/GitHub/NeuralOscillations');
 else
-    curDir = ('/Wadelab/psgroups/Projects/NeuralOscillations');
+    curDir = ('/wadelab_shared/Projects/NeuralOscillations');
 end
 
 %% Additional Directories (..:: This is the bit you change! ::..)
 
-projectFolder = '/KCIM'; % KCIM, Rodent, or Psychophysics
+projectFolder = '/Koniocellular'; % KCIM, Rodent, or Psychophysics
 dataFolder = '/KCIM_EEG'; % Folder that has S1, S2, S3 subfolders.
 resultsFolder = '/KCIM_Analysis_Results';
 
@@ -33,7 +33,7 @@ resultsFolder = '/KCIM_Analysis_Results';
 
 curDir = [curDir, projectFolder];
 
-dataDir = [curDir, dataFolder];
+dataDir =  [curDir, dataFolder];
 resultsDir = [curDir, dataFolder];
 dataPath = dir(dataDir);
 isDataFile = [dataPath.isdir];
@@ -216,7 +216,7 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
         'S Cone 5', 'S Cone 12', 'S Cone 16',...
         'R-G 5', 'R-G 12', 'R-G 16'};
     
-    displayFigure = false;
+    displayFigure = 1;
     
     if displayFigure 
         
