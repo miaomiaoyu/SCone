@@ -20,13 +20,17 @@ zscoreData = zscore(diffVector);
 
 % zscoreIndices are indices of the data where z score is beyond the denoted
 % range.
-zscoreIndices = find(zscoreData < zscoreLimit & zscoreData > -zscoreLimit);
+zscoreIndices = find(abs(zscoreData)>zscoreLimit);
+
+
 
 figure(500)
 subplot(2,1,1)
 plot(dataVector)
+title('Data Vector');
 subplot(2,1,2)
-plot(diffVector); hold on;
-plot(dataVector(zscoreIndices+1), 0, 'ro'); 
-
+plot(zscoreData); hold on;
+plot(zscoreIndices+1, 0, 'ro'); 
+title('Diff vector');
+hold off;
 end
