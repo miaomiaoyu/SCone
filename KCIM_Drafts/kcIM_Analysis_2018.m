@@ -13,15 +13,17 @@
 
 clear; close all;
 
-%% FOR NOW:
-cd('/Users/miaomiaoyu/GoogleDrive/Matlab_Toolboxes/Projects/Koniocellular');
+%% FOR NOW
 
-%% FOR ALEX:
-currDir=mfilename('fullpath');
-[p,n,e]=fileparts(currDir);
-cd(p);
+% thisComputer = computer;
+% 
+% if strcmp(thisComputer,'MACI64')
+%     curDirectory=('/Users/miaomiaoyu/Documents/GitHub/NeuralOscillations/');
+%     
+% else
+%     % - whatever the linux directory is - % 
+% end
 
-% this isn't working on my mac but it might for you
 
 %% THE SCRIPT:
 goodChans=1:65;
@@ -45,20 +47,20 @@ nGoodChans=length(goodChans);
 % pause -------- 22
 % unpause ------ 29
 
-EEGFolder='KCIM_EEG';
+EEGFolder='/KCIM_EEG';
 condTriggers=[24, 59, 79, 34, 83, 111, 54, 131, 175];
 
 % EEG file directory
-exptPath=[pwd, '/'];
-eegDir=[exptPath, EEGFolder]; % Folder containing individual subj folders.
-eegDataPath=dir(eegDir);
+dataDirectory = '/Users/miaomiaoyu/Documents/GitHub/NeuralOscillations/SCone_Data';
+eegDirectory=[dataDirectory, EEGFolder]; % Folder containing individual subj folders.
+eegDataPath=dir(eegDirectory);
 isDataFile=[eegDataPath.isdir];
 subFolders=eegDataPath(isDataFile);
-resultsDir=([exptPath, 'KCIM_Analysis_Results']);
+resultsDir=([dataDirectory, '/KCIM_Analysis_Results']);
 
 
 for thisFolderIndex=1:length(subFolders)
-    dirPath{thisFolderIndex}=strcat(eegDir, '/', subFolders(thisFolderIndex).name);
+    dirPath{thisFolderIndex}=strcat(eegDirectory, '/', subFolders(thisFolderIndex).name);
     % dirPath gives you names of full folder directories: '.', '..', 'S1', 'S2', etc.
 end
 
@@ -74,7 +76,7 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
     
     for thisSubjIndex=1:length(fListDat)
         fileName=fullfile(dirPath,fListDat(thisSubjIndex).name);
-        EEG=mmy_extractEEGData(fileName{thisFolderIndex}, goodChans, 0);
+        EEG=mmy_Extract_Subject_Data_EEG_ANT(fileName{thisFolderIndex}, goodChans, 0);
         
     end
     
