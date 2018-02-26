@@ -38,13 +38,20 @@ else
     isi = 1;
 end
 
-runningonVP=0;
 
-if runningonVP
+runningonVP=0;
+whereRunning = 'demo'
+switch whereRunning
+
+    case 'vp'
     % - Running on VP -
     cd('/Users/tyrion/Documents/MATLAB/Miaomiao/KoniocellularEEG');
     params=displayParamsVP;
-else
+    case 'demo'
+            params=displayParamsMac;
+
+    case 'erose'
+    
     % - Running on Eleanore-Rose -
     cd('/Users/miaomiaoyu/GoogleDrive/Matlab_Toolboxes/Projects/Koniocellular');
     params=displayParamsMac;
