@@ -20,7 +20,7 @@ thisComputer = computer;
 if strcmp(thisComputer, 'MACI64')
     curDir = ('/Users/miaomiaoyu/Documents/GitHub/NeuralOscillations');
 else
-    curDir = ('/Wadelab/psgroups/Projects/NeuralOscillations');
+    curDir = ('/wadelab_shared/Projects/NeuralOscillations');
 end
 
 %% Additional Directories (..:: This is the bit you change! ::..)
@@ -33,7 +33,7 @@ resultsFolder = '/KCIM_Analysis_Results';
 
 curDir = [curDir, projectFolder];
 
-dataDir = [curDir, dataFolder];
+dataDir =  [curDir, dataFolder];
 resultsDir = [curDir, dataFolder];
 dataPath = dir(dataDir);
 isDataFile = [dataPath.isdir];
@@ -243,7 +243,11 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
         'S Cone 5', 'S Cone 12', 'S Cone 16',...
         'R-G 5', 'R-G 12', 'R-G 16'};
     
+<<<<<<< HEAD
     displayFigure = true;
+=======
+    displayFigure = 1;
+>>>>>>> d55619b8eb356ba55470c4a4688ba4287aea4cb3
     
     if displayFigure
         
