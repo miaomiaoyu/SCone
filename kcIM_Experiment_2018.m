@@ -46,7 +46,7 @@ if runningonVP
     params=displayParamsVP;
 else
     % - Running on Eleanore-Rose -
-    cd('/Users/miaomiaoyu/GoogleDrive/Matlab_Toolboxes/Projects/Koniocellular');
+    cd('/Users/miaomiaoyu/Documents/GitHub/NeuralOscillations');
     params=displayParamsMac;
 end
 
