@@ -1,4 +1,4 @@
-% kcIM_Analysis_2018
+% kcIM_Analysis
 
 % Breaks up data into 1 second chunks and gets average power.
 % Looks at whether the greatest power corresponds to
@@ -34,7 +34,7 @@ resultsFolder = '/KCIM_Analysis_Results';
 curDir = [curDir, projectFolder];
 
 dataDir =  [curDir, dataFolder];
-resultsDir = [curDir, dataFolder];
+resultsDir = [curDir, resultsFolder];
 dataPath = dir(dataDir);
 isDataFile = [dataPath.isdir];
 subFolders = dataPath(isDataFile);
@@ -44,9 +44,9 @@ for thisFolderIndex = 1:length(subFolders)
     dirPath{thisFolderIndex} = strcat(dataDir, '/', subFolders(thisFolderIndex).name);
 end
 
-    goodChans=1:65;
-    chansToAnalyse=31:33;
-    nGoodChans=length(goodChans);
+goodChans=1:65;
+chansToAnalyse=31:33;
+nGoodChans=length(goodChans);
 
 for thisFolderIndex=3:length(dirPath) % This loops through each participant.
     
@@ -89,7 +89,6 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
     
     condTriggers=[24, 59, 79, 34, 83, 111, 54, 131, 175];
     
-    
     if strcmpi(subFolders(thisFolderIndex).name, 'GBE')
         condTriggers=[9, 59, 89, 13, 83, 125, 21, 131, 197];
     end    % GBE has a different set of triggers.
@@ -113,18 +112,41 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
     pauseIndex = find(EEG.eventList == 22);
     unpauseIndex = find(EEG.eventList == 29);
     
-    blinkPnts=EEG.data(end,:);
-    
     % *** insert pause code here ***
     % You should pick out the bits where the pause code was used and
     % discard the data between... find pause code, and the next unpause
     % code, discard the data, or just discard the entire rep it comes with.
     % find big blinkPnts and discard those as well.
     
-    exptEndTime = EEG.timeList(end) ; % The total time(s) from start to the last trigger.
-    exptEndIndex = exptEndTime * EEG.rate;
+    nWholeSeconds = floor(EEG.timeList(end) * 1/1000); % The total time (s) from start to the last trigger.
     
-    dataPnts=mean(EEG.data(chansToAnalyse, :));
+    nDataPoints = (nWholeSeconds+1) * EEG.rate; % add 1 second, just in case sometimes the last second run a little further.
+    
+    %% Take out the blink noises!
+    
+    zsLimit = 3.8; % Looks most suitable according to figures.
+    displayFig = 0; % Makes mmy_Noise_Extraction_Zscore enormously slow.
+    binSize = 400; % The average blink is about 400ms...
+    
+    nRemData = rem(nDataPoints, binSize);
+    nDataPoints = nDataPoints - nRemData;
+    
+    dataPoints=mean(EEG.data(chansToAnalyse, :));
+    floorDataPoints=mean(EEG.data(chansToAnalyse, 1:nDataPoints));
+    
+    blinkPoints=EEG.data(end, 1:nDataPoints);
+    
+    %zsIndices = mmy_Noise_Extraction_Zscore(blinkPoints, zsLimit, displayFig);
+    %sumBps = mmy_Noise_Per_Bin(zsIndices, zsLimit, nDataPoints, EEG.rate/2, exptEndTime*2);
+    
+   % [trashBits, zsIndices, sumBPS] = mmy_Noise_Extraction_Zscore(blinkPoints, zsLimit, nDataPoints, ...
+   % binSize, nDataPoints/binSize, displayFig);
+    
+    %floorDataPoints(trashBits) = nan;
+    
+    % If the error's regarding reshape elements must not change - check
+    % that you've got the right binSize (y/2) and exptEndTime (z*2).
+    
     
     % I'm not sure how much this helps, since we'll only be picking out the
     % 10-12 seconds coming after each condition code anyway.
@@ -154,7 +176,7 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
         
         nReps=length(triggerIndex); % just in case it's less than 15.
         
-        nBins = 9; % It's only really 8 bins we have for some reason - so stick with this.
+        nBins = 8; % It's only really 8 bins we have for some reason - so stick with this.
         
         for repNo = 1:nReps
             
@@ -169,6 +191,11 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
                 % all be my '1' triggers: each denoting a second.
                 % secondIndex
                 
+                % in reality, there are only eight '1's that follow my main
+                % condition trigger... also the last 1 coincides with the
+                % isi 4 in terms of timing - so perhaps we only have seven.
+                
+                
             end
             
         end
@@ -181,7 +208,7 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
             % dataPntIndex = floor((EEG.timeList(secondIndex)) * EEG.rate);
             
             for i = 1:numel(dataPntIndex)
-                dataPntsPerTrial(i,:) = dataPnts(dataPntIndex(i):(dataPntIndex(i)+(EEG.rate-1)));
+                dataPntsPerTrial(i,:) = floorDataPoints(dataPntIndex(i):(dataPntIndex(i)+(EEG.rate-1)));
             end % this is your reshapedWave essentially
             
             % Compute the raw variance of each bin to see if there are
@@ -193,24 +220,27 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
             %  badBins=find(zscore(binPower)>3); % Get rid of things more than x std from the mean
             %  dataPntsPerTrial(badBins,:)=0;
             
-            range = 2:70; % we're not interested in much beyond that.
+            myrange = 2:70; % we're not interested in much beyond that.
             
             ftDataPnts = fft(dataPntsPerTrial,[],2)/EEG.rate;
             % this is per condition. so each participant
             % should have 9 of these. Make sure we take the FT across dim 2
             % so subs are going down...
             
-            incohPowerSpect = squeeze(mean(abs(ftDataPnts))); % incoh averaging
-            cohPowerSpect = abs(squeeze(mean(ftDataPnts))); % coh averaging
+            incohPowerSpect = squeeze(nanmean(abs(ftDataPnts))); % incoh averaging
+            cohPowerSpect = abs(squeeze(nanmean(ftDataPnts))); % coh averaging
             
         end
         
         allIncohPowerSpect(triggerNo,:) = incohPowerSpect;
         allCohPowerSpect(triggerNo,:) = cohPowerSpect;
         
-        disp(condTriggers(triggerNo));
+        % disp(condTriggers(triggerNo));
         
     end
+    
+    maxYLim = max(allCohPowerSpect(myrange), [], 1);
+    minYLim = min(allCohPowerSpect(myrange), [], 1);
     
     plotTitle = {'Lum 5', 'Lum 12', 'Lum 16',...
         'S Cone 5', 'S Cone 12', 'S Cone 16',...
@@ -218,28 +248,29 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
     
     displayFigure = 1;
     
-    if displayFigure 
+    if displayFigure
         
-    figure()
-    
-    for i = 1:length(condTriggers)
-        subplot(3,3,i)
-        bar(allIncohPowerSpect(i,range));
-        h=title(plotTitle{i});
-        set(h,'Visible','on');
+        figure()
         
-    end
-    
-    figure()
-    
-    for i = 1:length(condTriggers)
-        subplot(3,3,i)
-        bar(allCohPowerSpect(i,range));
-        h=title(plotTitle{i});
-        set(h,'Visible','on');
+        for i = 1:length(condTriggers)
+            subplot(3,3,i)
+            bar(allIncohPowerSpect(i,myrange));
+            h=title(plotTitle{i});
+            set(h,'Visible','on');
+            
+        end
         
-    end
-    
+        figure()
+        
+        for i = 1:length(condTriggers)
+            subplot(3,3,i)
+            bar(allCohPowerSpect(i,myrange));
+            h=title(plotTitle{i});
+            set(h,'Visible','on');
+            %ylim([minYLim, maxYLim ]);
+            
+        end
+        
     end
     
     save([resultsfName, '_InCoh'], 'allIncohPowerSpect');
@@ -269,12 +300,12 @@ for thisFolderIndex = 1:length(resultsSubFolders)
     
     if contains(rName, '_Coh')
         allCohResults(:,:,cohFileIndex) = allCohPowerSpect;
-        disp('coh')
+        %disp('coh')
         cohFileIndex = cohFileIndex+1;
         
     elseif contains(rName, '_InCoh')
         allIncohResults(:,:,incohFileIndex)=allIncohPowerSpect;
-        disp('incoh')
+        %disp('incoh')
         incohFileIndex=incohFileIndex+1;
         
     end
@@ -286,7 +317,7 @@ avgIncohResults=mean(allIncohResults, 3);
 figure(100)
 for i = 1:length(condTriggers)
     subplot(3,3,i)
-    bar(avgCohResults(i, range));
+    bar(avgCohResults(i, myrange));
     h=title(plotTitle{i});
     set(h, 'Visible', 'on');
 end
@@ -294,7 +325,7 @@ end
 figure(101)
 for i = 1:length(condTriggers)
     subplot(3,3,i)
-    bar(avgIncohResults(i, range));
+    bar(avgIncohResults(i, myrange));
     h=title(plotTitle{i});
     set(h, 'Visible', 'on');
 end

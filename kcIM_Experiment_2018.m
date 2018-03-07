@@ -33,20 +33,27 @@ if coding
     blockDurationSec = 3;
     isi = 0.5;
 else
-    nReps = 15;
+    nReps = 5;
     blockDurationSec = 12;
     isi = 1;
 end
 
-runningonVP=0;
 
-if runningonVP
+runningonVP=0;
+whereRunning = 'demo'
+switch whereRunning
+
+    case 'vp'
     % - Running on VP -
     cd('/Users/tyrion/Documents/MATLAB/Miaomiao/KoniocellularEEG');
     params=displayParamsVP;
-else
+    case 'demo'
+            params=displayParamsMac;
+
+    case 'erose'
+    
     % - Running on Eleanore-Rose -
-    cd('/Users/miaomiaoyu/GoogleDrive/Matlab_Toolboxes/Projects/Koniocellular');
+    cd('/Users/miaomiaoyu/Documents/GitHub/NeuralOscillations');
     params=displayParamsMac;
 end
 
