@@ -33,7 +33,7 @@ if coding
     blockDurationSec = 3;
     isi = 0.5;
 else
-    nReps = 15;
+    nReps = 5;
     blockDurationSec = 12;
     isi = 1;
 end

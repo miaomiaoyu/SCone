@@ -34,7 +34,7 @@ resultsFolder = '/KCIM_Analysis_Results';
 curDir = [curDir, projectFolder];
 
 dataDir =  [curDir, dataFolder];
-resultsDir = [curDir, dataFolder];
+resultsDir = [curDir, resultsFolder];
 dataPath = dir(dataDir);
 isDataFile = [dataPath.isdir];
 subFolders = dataPath(isDataFile);
@@ -139,8 +139,8 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
     %zsIndices = mmy_Noise_Extraction_Zscore(blinkPoints, zsLimit, displayFig);
     %sumBps = mmy_Noise_Per_Bin(zsIndices, zsLimit, nDataPoints, EEG.rate/2, exptEndTime*2);
     
-    [trashBits, zsIndices, sumBPS] = mmy_Noise_Extraction_Zscore(blinkPoints, zsLimit, nDataPoints, ...
-        binSize, nDataPoints/binSize, displayFig);
+   % [trashBits, zsIndices, sumBPS] = mmy_Noise_Extraction_Zscore(blinkPoints, zsLimit, nDataPoints, ...
+   % binSize, nDataPoints/binSize, displayFig);
     
     %floorDataPoints(trashBits) = nan;
     
@@ -220,7 +220,7 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
             %  badBins=find(zscore(binPower)>3); % Get rid of things more than x std from the mean
             %  dataPntsPerTrial(badBins,:)=0;
             
-            range = 2:70; % we're not interested in much beyond that.
+            myrange = 2:70; % we're not interested in much beyond that.
             
             ftDataPnts = fft(dataPntsPerTrial,[],2)/EEG.rate;
             % this is per condition. so each participant
@@ -235,19 +235,18 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
         allIncohPowerSpect(triggerNo,:) = incohPowerSpect;
         allCohPowerSpect(triggerNo,:) = cohPowerSpect;
         
-        disp(condTriggers(triggerNo));
+        % disp(condTriggers(triggerNo));
         
     end
+    
+    maxYLim = max(allCohPowerSpect(myrange), [], 1);
+    minYLim = min(allCohPowerSpect(myrange), [], 1);
     
     plotTitle = {'Lum 5', 'Lum 12', 'Lum 16',...
         'S Cone 5', 'S Cone 12', 'S Cone 16',...
         'R-G 5', 'R-G 12', 'R-G 16'};
     
-<<<<<<< HEAD
-    displayFigure = true;
-=======
     displayFigure = 1;
->>>>>>> d55619b8eb356ba55470c4a4688ba4287aea4cb3
     
     if displayFigure
         
@@ -255,7 +254,7 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
         
         for i = 1:length(condTriggers)
             subplot(3,3,i)
-            bar(allIncohPowerSpect(i,range));
+            bar(allIncohPowerSpect(i,myrange));
             h=title(plotTitle{i});
             set(h,'Visible','on');
             
@@ -265,9 +264,10 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
         
         for i = 1:length(condTriggers)
             subplot(3,3,i)
-            bar(allCohPowerSpect(i,range));
+            bar(allCohPowerSpect(i,myrange));
             h=title(plotTitle{i});
             set(h,'Visible','on');
+            %ylim([minYLim, maxYLim ]);
             
         end
         
@@ -300,12 +300,12 @@ for thisFolderIndex = 1:length(resultsSubFolders)
     
     if contains(rName, '_Coh')
         allCohResults(:,:,cohFileIndex) = allCohPowerSpect;
-        disp('coh')
+        %disp('coh')
         cohFileIndex = cohFileIndex+1;
         
     elseif contains(rName, '_InCoh')
         allIncohResults(:,:,incohFileIndex)=allIncohPowerSpect;
-        disp('incoh')
+        %disp('incoh')
         incohFileIndex=incohFileIndex+1;
         
     end
@@ -317,7 +317,7 @@ avgIncohResults=mean(allIncohResults, 3);
 figure(100)
 for i = 1:length(condTriggers)
     subplot(3,3,i)
-    bar(avgCohResults(i, range));
+    bar(avgCohResults(i, myrange));
     h=title(plotTitle{i});
     set(h, 'Visible', 'on');
 end
@@ -325,7 +325,7 @@ end
 figure(101)
 for i = 1:length(condTriggers)
     subplot(3,3,i)
-    bar(avgIncohResults(i, range));
+    bar(avgIncohResults(i, myrange));
     h=title(plotTitle{i});
     set(h, 'Visible', 'on');
 end
