@@ -1,21 +1,23 @@
-function outData=analyseERPdataFedLibLinearClean(varargin)
-% function outData=analyseERPdataFedLibLinear(varargin)
+function outData=arw_analyseERPdataMMLibLinearClean(varargin)
+% function outData=arw_analyseERPdataMMLibLinearClean(varargin)
 % script to do basic analysis of EEG data and (optionally) MVPA
 % Now requires access to the mex files from the liblinear package (see also libsvm)
 % https://www.csie.ntu.edu.tw/~cjlin/liblinear/
 % % DHB 11/5/16
 % Modified by ARW 05/03/2018
+% 07/03/18 : ARW Edited to try and use frequency domain in stead of time
+% domain.
 
 nbootstrapruns = 1000;
-nResampPoints=125; % resample the tSeries to this many points.
+maxFrequency=100; % Look from 1Hz up to this point...
 %
 if nargin
     subj = varargin{1};
     processfiles = varargin{2};
     EEGpath=varargin{3};
-
+    
 else
-   error('No inputs');
+    error('No inputs');
 end
 dofiltering = 1;
 getname = 1;
@@ -23,164 +25,122 @@ subjname = [];
 
 subjname = char(subjname)
 
-condcodes = [1:4]; % Condition codes that you find in the dataset. For us 1-4 are the conditions, 5 is blank, 10 is end.
+condcodes = [24,59,79,34,83,111,54,131,175]; % Condition codes that you find in the dataset. For MM these are 24,59,79,343,83,111,54, 131, 175
 
 conditioncounter = zeros(1,length(condcodes)); % I think this is blocks x conditions
 
-if processfiles
-    
-    d = dir(strcat(EEGpath,subj,'/'));
-    blockcounter = 0;
-    for n = 1:length(d)
-        temp = d(n).name;
-        if length(temp)>3
-            if temp(end-2:end)=='cnt'
-                blockcounter = blockcounter + 1;
-                namelist{blockcounter} = temp;
-            end
+
+d = dir(strcat(EEGpath,subj,'/'));
+blockcounter = 0;
+for n = 1:length(d)
+    temp = d(n).name;
+    if length(temp)>3
+        if temp(end-2:end)=='cnt'
+            blockcounter = blockcounter + 1;
+            namelist{blockcounter} = temp;
         end
     end
-    fprintf('\nFound %d blocks in %s',blockcounter,strcat(EEGpath,subj));
-    
-    for block = 1:blockcounter
-        filename=strcat(EEGpath,subj,'/');
-        fprintf('\nLoading %s\n',filename);
-        
-        EEG = processcnt(filename,block);
-        
-        if dofiltering
-            disp('filtering...')
-            
-            highpass = .01;
-            lowpass = 30;
-            blur = .9;
-            mask = make_soft_window(9999, 9999, blur); % see make_soft_window function, .9 = blur
-            
-            % design filter
-            nsamples = length(EEG.data);
-            hptargetindex = round(highpass * nsamples/1000 + 1); % on graph 1 x nsamples, calculates how far either side of the centre of x axis the high-pass filter needs to cross .5
-            lptargetindex = round(lowpass * nsamples/1000 + 1); % same but for low-pass filter
-            
-            hfilter = hanning(hptargetindex*4); % high-pass filter
-            width = (1/blur)*(2*lptargetindex); % width of low-pass filter including blur
-            lfilter_lowres = mask(4500, :); % middle row of blurry circle is our low-pass filter
-            lfilter_highres = imresize(lfilter_lowres, [1, width]); % resize to match width of filter
-            lfilter = zeros(1, nsamples); % create vector the length of our samples
-            
-            
-            if length(round(((length(lfilter)/2)-(width/2)+1)):round(((length(lfilter)/2)+(width/2)))) == length(lfilter_highres)  % make sure high-pass filter fits into specified location in low-pass filter
-                lfilter(round(((length(lfilter)/2)-(width/2)+1)):round(((length(lfilter)/2)+(width/2)))) = lfilter_highres; % place low-pass filter in the middle
-            else
-                lfilter(round(((length(lfilter)/2)-(width/2))):round(((length(lfilter)/2)+(width/2)))) = lfilter_highres; % if not, reduce width of specified location by 1 (this should work)
-            end
-            
-            
-            filter = lfilter; % combine low- and high-pass filters, lfilter is already correct size for final filter
-            filter(round(((length(filter)/2)-hptargetindex*2+1)):round(((length(filter)/2)+hptargetindex*2))) = 1-hfilter; % add high-pass filter
-      
-            % apply filter
-            for ch = 1:66 % No need to iterate, this can all be done in one go!
-                temp = EEG.data(ch,:);     % select channel
-                ffttemp = fftshift(fft(temp));  % apply fourier transform, then fftshift
-                filteredfft = ffttemp.*filter; % multiply by filter
-                temp = real(ifft(ifftshift(filteredfft))); % remove imaginary components
-                EEG.data(ch,:) = temp; % place back in EEG structure
-            end
-            
-        end
-        
-        clear triggertimes triggercond
-        
-        % For Fed's experiments, codes are 1,2,3,4 for different
-        % combinations of away,towards,CD,IOVD. 5 marks the start of an
-        % epoch.
-        
-        triggercount = 0;
-        for n = 1:length(EEG.event)
-            if ~isempty(str2num(EEG.event(n).type))
-                if sum(find(condcodes(:)==str2num(EEG.event(n).type)))>0        % now just allow triggers from the list
-                    triggercount = triggercount + 1;
-                    triggertimes(triggercount) = EEG.event(n).latency;
-                    triggercond(triggercount) = str2num(EEG.event(n).type);
-                end
-            end
-        end
-        
-        triggertimes=round(triggertimes); % Round to nearest ms
-        
-        a = find(ismember(triggercond,condcodes)); % This should compare against condcodes....     5 is a blank. Come to think of it, it would be nice to have this in there as well as a control..
-        trialtimes = triggertimes(a);
-        trialconds = rem(triggercond(a),10);    % remove the first digit so codes are 1-4
-       
-        starttrial = 1;
-        ntrials = length(trialtimes);
-        
-        
-        for trial = starttrial:ntrials
-            
-            currenttrial = trialconds(trial);
-            conditioncounter(currenttrial) = conditioncounter(currenttrial) + 1;
-            
-            %                 ch
-            %                 (trialtimes(trial)-200)
-            %                 (trialtimes(trial)+799)
-            %                 size(EEG.data)
-            temp = EEG.data(:,(trialtimes(trial)-200):(trialtimes(trial)+799));
-            resampData=interp1(1:1000,temp',linspace(1,1000,nResampPoints)); % Resample the data so that we only have to deal with 250 (say) points.
-            
-            alltrials(currenttrial,conditioncounter(currenttrial),:,:) = resampData';
-            
-            
-            
+end
+fprintf('\nFound %d blocks in %s',blockcounter,strcat(EEGpath,subj));
+
+filename=strcat(EEGpath,subj,'/');
+fprintf('\nLoading %s\n',filename);
+
+EEG = processcnt(filename,block);
+
+
+clear triggertimes triggercond
+
+% For Fed's experiments, codes are 1,2,3,4 for different
+% combinations of away,towards,CD,IOVD. 5 marks the start of an
+% epoch.
+
+triggercount = 0;
+for n = 1:length(EEG.event)
+    if ~isempty(str2num(EEG.event(n).type))
+        if sum(find(condcodes(:)==str2num(EEG.event(n).type)))>0        % now just allow triggers from the list
+            triggercount = triggercount + 1;
+            triggertimes(triggercount) = EEG.event(n).latency;
+            triggercond(triggercount) = str2num(EEG.event(n).type);
         end
     end
+end
+
+triggertimes=round(triggertimes); % Round to nearest ms
+
+a = find(ismember(triggercond,condcodes)); % This should compare against condcodes....     5 is a blank. Come to think of it, it would be nice to have this in there as well as a control..
+trialtimes = triggertimes(a);
+trialconds = rem(triggercond(a),10);    % remove the first digit so codes are 1-4
+
+starttrial = 1;
+ntrials = length(trialtimes);
+
+
+for trial = starttrial:ntrials
     
-    %
+    currenttrial = trialconds(trial);
+    conditioncounter(currenttrial) = conditioncounter(currenttrial) + 1;
     
-    for n = 1:EEG.nchan
-        if EEG.chanlocs(n).labels(1:2)=='Oz'
-            targetchannelnumber(1) = n;
-        end
-        if EEG.chanlocs(n).labels(1:2)=='O1'
-            targetchannelnumber(2) = n;
-        end
-        if EEG.chanlocs(n).labels(1:2)=='O2'
-            targetchannelnumber(3) = n;
-        end
-        
-        if length(EEG.chanlocs(n).labels)>2
-            if EEG.chanlocs(n).labels(1:3)=='POz'
-                targetchannelnumber(4) = n;
-            end
-            if EEG.chanlocs(n).labels(1:3)=='PO4'
-                targetchannelnumber(5) = n;
-            end
-            if EEG.chanlocs(n).labels(1:3)=='PO6'
-                targetchannelnumber(6) = n;
-            end
-            if EEG.chanlocs(n).labels(1:3)=='PO8'
-                targetchannelnumber(7) = n;
-            end
-            if EEG.chanlocs(n).labels(1:3)=='PO3'
-                targetchannelnumber(8) = n;
-            end
-            if EEG.chanlocs(n).labels(1:3)=='PO5'
-                targetchannelnumber(9) = n;
-            end
-            if EEG.chanlocs(n).labels(1:3)=='PO7'
-                targetchannelnumber(10) = n;
-            end
-        end
+  
+    temp = EEG.data(:,(trialtimes(trial)+(junkBins*EEG.rate)):(trialtimes(trial)+((junkBins+goodBins)*EEG.rate)));
+    % Pull out all the good data bins
+    % Reshape them:
+    tempR=reshape(temp,66,EEG.rate,goodBins);
+    % Now compute the ft
+    fTempR=fft(tempR,[],2);
+    %Chop at the right frequency
+    fTempR_Chopped=fTempR(:,2:maxFrequency,:) % For now this is still complex....
+    
+    
+    % Thhis little bit here.... you need to add the reshaped matrix you
+    % just made into a big array (alltrials) in the correct place. This
+    % will be 150 * 9 * 66 * 100 :  bins x conds x channels x frequency points 
+    %alltrials(currenttrial,conditioncounter(currenttrial),:,:) = resampData'; 
+    
+end
+disp(trialcodes)
+
+%
+return % FOr now while testing. At this point instead, try prtinting out all the conditions you found and the time points...
+
+
+for n = 1:EEG.nchan
+    if EEG.chanlocs(n).labels(1:2)=='Oz'
+        targetchannelnumber(1) = n;
+    end
+    if EEG.chanlocs(n).labels(1:2)=='O1'
+        targetchannelnumber(2) = n;
+    end
+    if EEG.chanlocs(n).labels(1:2)=='O2'
+        targetchannelnumber(3) = n;
     end
     
- %   load Waveguard.mat;
-%    channelmappings = getchannelmappings(lay,EEG.chanlocs);
-    
-   % save(strcat(EEGpath,'Results/',subjname,'processed.mat'),'alltrials','targetchannelnumber','channelmappings','conditioncounter');
-else
- %   load(strcat(EEGpath,'Results/',subjname,'processed.mat'),'alltrials','targetchannelnumber','channelmappings','conditioncounter');
- %   load Waveguard.mat;
-end % End if process files
+    if length(EEG.chanlocs(n).labels)>2
+        if EEG.chanlocs(n).labels(1:3)=='POz'
+            targetchannelnumber(4) = n;
+        end
+        if EEG.chanlocs(n).labels(1:3)=='PO4'
+            targetchannelnumber(5) = n;
+        end
+        if EEG.chanlocs(n).labels(1:3)=='PO6'
+            targetchannelnumber(6) = n;
+        end
+        if EEG.chanlocs(n).labels(1:3)=='PO8'
+            targetchannelnumber(7) = n;
+        end
+        if EEG.chanlocs(n).labels(1:3)=='PO3'
+            targetchannelnumber(8) = n;
+        end
+        if EEG.chanlocs(n).labels(1:3)=='PO5'
+            targetchannelnumber(9) = n;
+        end
+        if EEG.chanlocs(n).labels(1:3)=='PO7'
+            targetchannelnumber(10) = n;
+        end
+    end
+end
+
+
 
 conditioncounter
 
@@ -242,7 +202,7 @@ for comp = 1:4      % three comparisons
     
     
     parfor runno = 1:nbootstrapruns % Repeat the sampling over a large number of bootstrapped resamples of different averaged sets
-        Aindices = randperm(totalsamples(1)); % Randomly permute the set of sample indices. 
+        Aindices = randperm(totalsamples(1)); % Randomly permute the set of sample indices.
         Bindices = randperm(totalsamples(2));
         AdataCond = squeeze(alltrialsN(complistA(comp),:,:,:)); % Then pick out a set relevant to the conditions we are looking at right now.
         BdataCond = squeeze(alltrialsN(complistB(comp),:,:,:));
@@ -260,17 +220,17 @@ for comp = 1:4      % three comparisons
         da=double(datameanvectACond(:,:,:));
         db=double(datameanvectBCond(:,:,:));
         for t = 1:nResampPoints % Time points
-     
             
-          
+            
+            
             d=sparse(([da(:,:,t);db(:,:,t)])); % This is the way liblinear likes its inputs
-          
+            
             a=train(l,d,'-c 1 -v 5 -q');
-          %  q=evalc(c); % Doing this to avoid message to console. 
-                        %This calls liblinear's 'train' routine. Because we've asked to do kfold validation, this will simply return a single number in 'a' which is the classifier accuracy. Random chance is 50, 
-           
+            %  q=evalc(c); % Doing this to avoid message to console.
+            %This calls liblinear's 'train' routine. Because we've asked to do kfold validation, this will simply return a single number in 'a' which is the classifier accuracy. Random chance is 50,
+            
             allKFoldLoss(comp,runno,t)=a; % Keep track of each bootstrap iteration's accuracy
-          
+            
         end % next t
         
     end % next boot

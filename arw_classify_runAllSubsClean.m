@@ -3,6 +3,7 @@ aStart=now;
 EEGpath = '/wadelab_shared/data/MiD_EEG_Classify/';
 
 sList={'AW','BP','DL','FS','GM','IJ','IS','JS','MW','RM'}; % We leave one out because they don't have enough trials.
+
 for thisSub=1:length(sList)
     fprintf('\nRunning subject %s : %d of %d\n',sList{thisSub},thisSub,length(sList));
     
