@@ -5,11 +5,13 @@ function outData=arw_analyseERPdataMMLibLinearClean(varargin)
 % https://www.csie.ntu.edu.tw/~cjlin/liblinear/
 % % DHB 11/5/16
 % Modified by ARW 05/03/2018
-% 07/03/18 : ARW Edited to try and use frequency domain in stead of time
+% 07/03/18 : ARW Edited to try and use frequency domain instead of time
 % domain.
 
 nbootstrapruns = 1000;
 maxFrequency=100; % Look from 1Hz up to this point...
+junkBins=1;
+goodBins=7;
 %
 if nargin
     subj = varargin{1};
@@ -26,7 +28,7 @@ subjname = [];
 subjname = char(subjname)
 
 condcodes = [24,59,79,34,83,111,54,131,175]; % Condition codes that you find in the dataset. For MM these are 24,59,79,343,83,111,54, 131, 175
-
+nConds=length(condcodes);
 conditioncounter = zeros(1,length(condcodes)); % I think this is blocks x conditions
 
 
@@ -46,18 +48,20 @@ fprintf('\nFound %d blocks in %s',blockcounter,strcat(EEGpath,subj));
 filename=strcat(EEGpath,subj,'/');
 fprintf('\nLoading %s\n',filename);
 
-EEG = processcnt(filename,block);
+EEG = processcnt(filename,1);
 
 
 clear triggertimes triggercond
 
-% For Fed's experiments, codes are 1,2,3,4 for different
-% combinations of away,towards,CD,IOVD. 5 marks the start of an
-% epoch.
-
+% For MMY's experiments, codes are 24,59,79,34,83,111,54,131,175 for different
+% combinations of colour (Lum, L-M and S) and Frequency (5,12,16 Hz)
+%.
+%% Get the unique codes
 triggercount = 0;
 for n = 1:length(EEG.event)
+    
     if ~isempty(str2num(EEG.event(n).type))
+        thisCode(n)=str2num(EEG.event(n).type);
         if sum(find(condcodes(:)==str2num(EEG.event(n).type)))>0        % now just allow triggers from the list
             triggercount = triggercount + 1;
             triggertimes(triggercount) = EEG.event(n).latency;
@@ -65,114 +69,131 @@ for n = 1:length(EEG.event)
         end
     end
 end
-
+%%
 triggertimes=round(triggertimes); % Round to nearest ms
 
 a = find(ismember(triggercond,condcodes)); % This should compare against condcodes....     5 is a blank. Come to think of it, it would be nice to have this in there as well as a control..
 trialtimes = triggertimes(a);
-trialconds = rem(triggercond(a),10);    % remove the first digit so codes are 1-4
+trialconds = triggercond(a);    % remove the first digit so codes are 1-4
 
 starttrial = 1;
 ntrials = length(trialtimes);
 
-
+% PRe-allocate a big array of zeros that will contain the individual bin
+% data for each condition type. 
+% This will be 99 (maxFrequency-1) x nGoodBins * number of instances of
+% that trial type (15 in this case) x conditions
+nInstancesOfEachCondition=15;
+nSensors=66;
+%%
+rawFFTData=zeros(nSensors,maxFrequency-1,goodBins,nInstancesOfEachCondition,nConds);
+tic
 for trial = starttrial:ntrials
     
     currenttrial = trialconds(trial);
-    conditioncounter(currenttrial) = conditioncounter(currenttrial) + 1;
+    trialIndex=find(condcodes==currenttrial);
     
+    conditioncounter(trialIndex) = conditioncounter(trialIndex) + 1;
+     
   
-    temp = EEG.data(:,(trialtimes(trial)+(junkBins*EEG.rate)):(trialtimes(trial)+((junkBins+goodBins)*EEG.rate)));
+    temp = EEG.data(:,(trialtimes(trial)+(junkBins*EEG.rate)+1):(trialtimes(trial)+((junkBins+goodBins)*EEG.rate)));
     % Pull out all the good data bins
     % Reshape them:
     tempR=reshape(temp,66,EEG.rate,goodBins);
     % Now compute the ft
     fTempR=fft(tempR,[],2);
     %Chop at the right frequency
-    fTempR_Chopped=fTempR(:,2:maxFrequency,:) % For now this is still complex....
+    fTempR_Chopped=fTempR(:,2:maxFrequency,:); % For now this is still complex....
     
     
     % Thhis little bit here.... you need to add the reshaped matrix you
     % just made into a big array (alltrials) in the correct place. This
     % will be 150 * 9 * 66 * 100 :  bins x conds x channels x frequency points 
     %alltrials(currenttrial,conditioncounter(currenttrial),:,:) = resampData'; 
+    rawFFTData(:,:,:,conditioncounter(trialIndex),trialIndex)=fTempR_Chopped;
     
-end
-disp(trialcodes)
-
-%
-return % FOr now while testing. At this point instead, try prtinting out all the conditions you found and the time points...
-
-
-for n = 1:EEG.nchan
-    if EEG.chanlocs(n).labels(1:2)=='Oz'
-        targetchannelnumber(1) = n;
-    end
-    if EEG.chanlocs(n).labels(1:2)=='O1'
-        targetchannelnumber(2) = n;
-    end
-    if EEG.chanlocs(n).labels(1:2)=='O2'
-        targetchannelnumber(3) = n;
-    end
     
-    if length(EEG.chanlocs(n).labels)>2
-        if EEG.chanlocs(n).labels(1:3)=='POz'
-            targetchannelnumber(4) = n;
-        end
-        if EEG.chanlocs(n).labels(1:3)=='PO4'
-            targetchannelnumber(5) = n;
-        end
-        if EEG.chanlocs(n).labels(1:3)=='PO6'
-            targetchannelnumber(6) = n;
-        end
-        if EEG.chanlocs(n).labels(1:3)=='PO8'
-            targetchannelnumber(7) = n;
-        end
-        if EEG.chanlocs(n).labels(1:3)=='PO3'
-            targetchannelnumber(8) = n;
-        end
-        if EEG.chanlocs(n).labels(1:3)=='PO5'
-            targetchannelnumber(9) = n;
-        end
-        if EEG.chanlocs(n).labels(1:3)=='PO7'
-            targetchannelnumber(10) = n;
-        end
-    end
+     
 end
-
-
-
-conditioncounter
-
-% subtract out pre-trial baseline for all trials
-fprintf('\nThis is the size of ''s''\n');
-
-s = size(alltrials)
-
-for cond = 1:s(1)
-    for trial = 1:s(2)
-        for ch = 1:s(3)
-            temp = squeeze(alltrials(cond,trial,ch,:));
-            temp = temp - mean(temp(1:50));
-            alltrials(cond,trial,ch,:) = temp;
-        end
-    end
-    
-end
+toc
 %%
-figure(11);
-meanTS=squeeze(mean(alltrials,2));
-semTS=squeeze(std(alltrials,[],2))/sqrt(220);
-errorbar(squeeze(meanTS(:,32,:))',squeeze(semTS(:,32,:))');
+%
+
+rawFFTData=reshape(rawFFTData,[nSensors,maxFrequency-1,goodBins*nInstancesOfEachCondition,nConds]);
+
+% 
+% for n = 1:EEG.nchan
+%     if EEG.chanlocs(n).labels(1:2)=='Oz'
+%         targetchannelnumber(1) = n;
+%     end
+%     if EEG.chanlocs(n).labels(1:2)=='O1'
+%         targetchannelnumber(2) = n;
+%     end
+%     if EEG.chanlocs(n).labels(1:2)=='O2'
+%         targetchannelnumber(3) = n;
+%     end
+%     
+%     if length(EEG.chanlocs(n).labels)>2
+%         if EEG.chanlocs(n).labels(1:3)=='POz'
+%             targetchannelnumber(4) = n;
+%         end
+%         if EEG.chanlocs(n).labels(1:3)=='PO4'
+%             targetchannelnumber(5) = n;
+%         end
+%         if EEG.chanlocs(n).labels(1:3)=='PO6'
+%             targetchannelnumber(6) = n;
+%         end
+%         if EEG.chanlocs(n).labels(1:3)=='PO8'
+%             targetchannelnumber(7) = n;
+%         end
+%         if EEG.chanlocs(n).labels(1:3)=='PO3'
+%             targetchannelnumber(8) = n;
+%         end
+%         if EEG.chanlocs(n).labels(1:3)=='PO5'
+%             targetchannelnumber(9) = n;
+%         end
+%         if EEG.chanlocs(n).labels(1:3)=='PO7'
+%             targetchannelnumber(10) = n;
+%         end
+%     end
+% end
+
+
+
+
+% % subtract out pre-trial baseline for all trials
+% fprintf('\nThis is the size of ''s''\n');
+% 
+% s = size(alltrials)
+% 
+% for cond = 1:s(1)
+%     for trial = 1:s(2)
+%         for ch = 1:s(3)
+%             temp = squeeze(alltrials(cond,trial,ch,:));
+%             temp = temp - mean(temp(1:50));
+%             alltrials(cond,trial,ch,:) = temp;
+%         end
+%     end
+%     
+% end
+% %%
+% figure(11);
+% meanTS=squeeze(mean(alltrials,2));
+% semTS=squeeze(std(alltrials,[],2))/sqrt(220);
+% errorbar(squeeze(meanTS(:,32,:))',squeeze(semTS(:,32,:))');
 
 %%
 tic
-nsamplespermean = 10;       % must divide into 210 as an integer
+nsamplespermean = 5;       % must divide into 105 as an integer
+
+%%% Stoppinghere 15/3/2018. Todo: Convert fft stuff to abs (or phase). 
+%% Probably reformat that big FFT array into the same shape as alltrials to make it fit below: (conds x trials x channels x freq)
 % 1. CD towards
 % 2. CD away
 % 3. IOVD towards
 % 4. IOVD away
-complistA = [1 3 1 2 1];
+complistA = [1 3 1 2 1]; % Comparisons. You compare one thing from a with one thing from b.So first comp is 1 v 2, then 3 v 4 etc...
+
 complistB = [2 4 3 4 5];
 allmvpa = zeros(length(complistA),nResampPoints);  % matrix to store the MVPA results
 
@@ -188,11 +209,13 @@ clear allScorePred;
 clear allKFoldLoss;
 clear allMeanPred;
 clear allStdPred;
-allKFoldLoss=zeros(4,nbootstrapruns,nResampPoints);
+nComparisons=length(compListA);
+
+allKFoldLoss=zeros(nComparisons,nbootstrapruns,nResampPoints);
 
 
 
-for comp = 1:4      % three comparisons
+for comp = 1:9      % three comparisons
     comp % Display the current condition
     totalsamples(1) = 210;           % however many trials we have per condition. Because we want to block these into groups, we round to some easily-factored number
     totalsamples(2) = 210;
@@ -201,7 +224,7 @@ for comp = 1:4      % three comparisons
     tic % Time each condition...
     
     
-    parfor runno = 1:nbootstrapruns % Repeat the sampling over a large number of bootstrapped resamples of different averaged sets
+    for runno = 1:nbootstrapruns % Repeat the sampling over a large number of bootstrapped resamples of different averaged sets
         Aindices = randperm(totalsamples(1)); % Randomly permute the set of sample indices.
         Bindices = randperm(totalsamples(2));
         AdataCond = squeeze(alltrialsN(complistA(comp),:,:,:)); % Then pick out a set relevant to the conditions we are looking at right now.

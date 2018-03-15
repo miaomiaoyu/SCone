@@ -1,13 +1,12 @@
 
 aStart=now;
-EEGpath = '/wadelab_shared/data/MiD_EEG_Classify/';
-
-sList={'AW','BP','DL','FS','GM','IJ','IS','JS','MW','RM'}; % We leave one out because they don't have enough trials.
+EEGpath = '/wadelab_shared/Projects/NeuralOscillations/Koniocellular/KCIM_EEG/';
+sList={'ARW','RM'}; % We leave one out because they don't have enough trials.
 
 for thisSub=1:length(sList)
     fprintf('\nRunning subject %s : %d of %d\n',sList{thisSub},thisSub,length(sList));
     
-    dataOut(thisSub)=analyseERPdataFedLiblinearClean(sList{thisSub},1,EEGpath);
+    dataOut(thisSub)=arw_analyseERPdataMMLiblinearClean(sList{thisSub},1,EEGpath);
 end
 aEnd=now;
 fprintf('\nDone\nStarted %s, ended %s\n',datestr(aStart),datestr(aEnd));
