@@ -28,16 +28,7 @@ se=squeeze(std(mLine))/sqrt(length(dataOut));
 figure(12); hold off;
 fc=hsv(15);
 
-for t=1:7
-     
-p=shadedErrorBar(1:99,squeeze(gm(t,:)),se(t,:));
-  set(p.patch,'FaceColor',fc(t,:));
-    set(p.mainLine,'Color',fc(t,:))*2;
-    set(p.mainLine,'LineWidth',2);
-    set(p.patch,'FaceAlpha',.4);
-hold on;
 
-end
 xlabel('Time (ms)');
 ylabel('Percent correct');
 %% --------

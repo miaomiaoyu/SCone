@@ -128,9 +128,8 @@ tic
 nsamplespermean = 5;       % must divide into 105 as an integer. We will chop the fft  into lumps of 5 bins, average them and compute classificaiotn.
 
 % MMY- Here let us know what the condition codes mean...
-
-complistA = [1 1 2 2 3 3]; % Comparisons. You compare one thing from a with one thing from b.So first comp is 1 v 2, then 1 v 3 etc...
-complistB = [4 7 5 8 6 9] ;% Obviously there are a lot of these with 9x9 conditions. There is nothing to stop us looking at
+complistA = [1 1 4]+2; % Comparisons. You compare one thing from a with one thing from b.So first comp is 1 v 2, then 1 v 3 etc...
+complistB = [4 7 7]+2 ;
                                   % All of them but it might be nice to
                                   % have some hypotheses. I'd be interested
                                   % in classifying color rather than
@@ -162,7 +161,7 @@ for comp = 1:nComparisons      % three comparisons
     tic % Time each condition...
     
     
-    for runno = 1:nbootstrapruns % Repeat the sampling over a large number of bootstrapped resamples of different averaged sets
+    parfor runno = 1:nbootstrapruns % Repeat the sampling over a large number of bootstrapped resamples of different averaged sets
         Aindices = randperm(totalsamples(1)); % Randomly permute the set of sample indices.
         Bindices = randperm(totalsamples(2));
         AdataCond = squeeze(alltrialsN(complistA(comp),:,:,:)); % Then pick out a set relevant to the conditions we are looking at right now.
