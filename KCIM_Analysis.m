@@ -11,6 +11,14 @@
 % 30/10/17, M.Y.
 % last edited: 25/01/17, M.Y.
 
+
+% improvements to be made: use ICA as blink electrode noise removal
+% technique 
+
+% run the data through the classification function too
+
+% 
+
 %% General Directories (This bit never changes):
 
 clear; close all;
@@ -139,10 +147,10 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
     %zsIndices = mmy_Noise_Extraction_Zscore(blinkPoints, zsLimit, displayFig);
     %sumBps = mmy_Noise_Per_Bin(zsIndices, zsLimit, nDataPoints, EEG.rate/2, exptEndTime*2);
     
-    [trashBits, zsIndices, sumBPS] = mmy_Noise_Extraction_Zscore(blinkPoints, zsLimit, nDataPoints, ...
-    binSize, nDataPoints/binSize, displayFig);
+    %[trashBits, zsIndices, sumBPS]=mmy_Noise_Extraction_Zscore(blinkPoints, zsLimit, nDataPoints, ...
+    %binSize, nDataPoints/binSize, displayFig);
     
-    floorDataPoints(trashBits) = nan;
+   % floorDataPoints(trashBits) = nan;
     
     % If the error's regarding reshape elements must not change - check
     % that you've got the right binSize (y/2) and exptEndTime (z*2).
@@ -246,7 +254,7 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
         'S Cone 5', 'S Cone 12', 'S Cone 16',...
         'R-G 5', 'R-G 12', 'R-G 16'};
     
-    displayFigure = 1;
+    displayFigure = 0;
     
     if displayFigure
         

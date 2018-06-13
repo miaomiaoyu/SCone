@@ -364,11 +364,6 @@ try % Start a try/catch statement, in case something goes awry with the PTB func
         
         % -------- F I X A T I O N  C R O S S  --------
         
-        for secondChunk = 1:5
-            crossColor = round(rand(1));
-            Screen('FillRect', w, crossColorMat{crossColor+1}, fCross);
-        end
-        
         for breakIndex = 1:nBreakBlock  % For each 10 minutes you get a break
             
             for repIndex=1:nReps   % You get 5 reps of all 9 conditions each 10 minutes
@@ -524,6 +519,10 @@ try % Start a try/catch statement, in case something goes awry with the PTB func
                         % Update display on next refresh (& provide deadline)
                         [vbl , ~ , ~, missed] = Screen('Flip', w, 0, [], [], 1);
                         
+                         Screen('BlendFunction', w, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); % need to flip the alpha around again (anti-aliasing)
+            
+                
+                        Screen('FillRect', w, [0 0 0], fCross);
                         
                         if missed>0
                             missedFrames=missedFrames+1;

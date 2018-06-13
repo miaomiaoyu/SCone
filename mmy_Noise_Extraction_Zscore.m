@@ -76,7 +76,6 @@ sumBPS = sum(bps);
 % Note: sumBPS gives you a vector that denotes how many data points beyond
 % the zsLimit there are in each bin. You can choose to throw
 
-<<<<<<< HEAD
 trashIndices = find(sumBPS > 10);
 
 for i = 1:length(trashIndices)
@@ -84,8 +83,6 @@ for i = 1:length(trashIndices)
     trashBits(i,:) = (trashPoints - binSize + 1) : trashPoints;
 end
 
-    
-=======
 %figure(500)
 %subplot(2,1,1)
 %plot(dataVector)
@@ -95,4 +92,3 @@ end
 %plot(zscoreIndices+1, 0, 'ro'); 
 %title('Diff vector');
 %hold off;
->>>>>>> d55619b8eb356ba55470c4a4688ba4287aea4cb3

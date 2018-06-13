@@ -14,7 +14,12 @@ sList={'AN', 'ARW', 'FS' , 'GV' , 'JT' , 'LH',  'MS',  'MTS',  'MY',  'PY',  'RM
 for thisSub=1:length(sList)
     fprintf('\nRunning subject %s : %d of %d\n',sList{thisSub},thisSub,length(sList));
     
-    dataOut(thisSub)=arw_analyseERPdataMMLibLinearClean(sList{thisSub},1,EEGpath);
+    dataOut(thisSub)=arw_analyseERPdataMMLibSVM(sList{thisSub},1,EEGpath,0,100); 
+   % subj = varargin{1};
+   % processfiles = varargin{2};
+   % EEGpath=varargin{3};
+   % complexFlag=varargin{4};
+   % nbootstrapruns=varargin{5};
 end
 aEnd=now;
 fprintf('\nDone\nStarted %s, ended %s\n',datestr(aStart),datestr(aEnd));
@@ -31,10 +36,11 @@ se=squeeze(std(mLine))/sqrt(length(dataOut));
 
 figure(13); hold off;
 fc=hsv(15);
+nFreqs=size(gm,2);
 
 for t=1:3
      
-p=shadedErrorBar(1:99,squeeze(gm(t,:)),(se(t,:)));
+p=shadedErrorBar(1:nFreqs,squeeze(gm(t,:)),(se(t,:)));
   set(p.patch,'FaceColor',fc(t,:));
     set(p.mainLine,'Color',fc(t,:))*2;
     set(p.mainLine,'LineWidth',2);
@@ -51,7 +57,7 @@ fc=hsv(15);
 clear sigPoints;
 for t=1:size(mLine,2)
     sigPoints{t}=d_doclustercorr((squeeze(mLine(:,t,:))/100), 1, .5, .05, 1000);
-    p=shadedErrorBar(1:99,squeeze(gm(t,:)),se(t,:));
+    p=shadedErrorBar(1:nFreqs,squeeze(gm(t,:)),se(t,:));
     
     set(p.patch,'FaceColor',fc(t,:));
     set(p.mainLine,'Color',fc(t,:))*2;

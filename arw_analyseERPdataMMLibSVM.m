@@ -1,4 +1,4 @@
-function outData=arw_analyseERPdataMMLibLinearClean(varargin)
+function outData=arw_analyseERPdataMMLibSVM(varargin)
 % function outData=arw_analyseERPdataMMLibLinearClean(varargin)
 % script to do basic analysis of EEG data and (optionally) MVPA
 % Now requires access to the mex files from the liblinear package (see also libsvm)
@@ -8,16 +8,16 @@ function outData=arw_analyseERPdataMMLibLinearClean(varargin)
 % 07/03/18 : ARW Edited to try and use frequency domain instead of time
 % domain.
 
-nbootstrapruns = 1000;
-maxFrequency=100; % Look from 1Hz up to this point...
+maxFrequency=150; % Look from 1Hz up to this point...
 junkBins=1;
-goodBins=7;
+goodBins=11;
 %
 if nargin
     subj = varargin{1};
     processfiles = varargin{2};
     EEGpath=varargin{3};
-    
+    complexFlag=varargin{4};
+    nbootstrapruns=varargin{5};
 else
     error('No inputs');
 end
@@ -86,7 +86,6 @@ ntrials = length(trialtimes);
 nInstancesOfEachCondition=15;
 nSensors=66;
 %%
-%rawFFTData=zeros(nSensors,maxFrequency-1,goodBins,nInstancesOfEachCondition,nConds);
 rawFFTData=zeros(nConds,nInstancesOfEachCondition,goodBins,nSensors,maxFrequency-1);%,nInstancesOfEachCondition,nConds);
 %cond x trial x channel x freq
 tic
@@ -96,8 +95,7 @@ for trial = starttrial:ntrials
     trialIndex=find(condcodes==currenttrial);
     
     conditioncounter(trialIndex) = conditioncounter(trialIndex) + 1;
-     
-  
+    
     temp = EEG.data(:,(trialtimes(trial)+(junkBins*EEG.rate)+1):(trialtimes(trial)+((junkBins+goodBins)*EEG.rate)));
     % Pull out all the good data bins
     % Reshape them:
@@ -115,29 +113,35 @@ for trial = starttrial:ntrials
     %rawFFTData(:,:,:,conditioncounter(trialIndex),trialIndex)=fTempR_Chopped;
     rawFFTData(trialIndex,conditioncounter(trialIndex),:,:,:)=shiftdim(fTempR_Chopped,2);
      
-     
+
 end
 toc
 %%
-%
-%keyboard
 
 rawFFTData=reshape(rawFFTData,[nConds,goodBins*nInstancesOfEachCondition,nSensors,maxFrequency-1]);
-
 
 
 %%
 tic
 nsamplespermean = 5;       % must divide into 105 as an integer. We will chop the fft  into lumps of 5 bins, average them and compute classificaiotn.
 
-%%% Stoppinghere 15/3/2018. Todo: Convert fft stuff to abs (or phase). 
-%% Probably reformat that big FFT array into the same shape as alltrials to make it fit below: (conds x trials x channels x freq)
-% ARW Done
-
 % MMY- Here let us know what the condition codes mean...
+%complistA = [1 1 2 2 3 3]; % Comparisons. You compare one thing from a with one thing from b.So first comp is 1 v 2, then 1 v 3 etc...
+%complistB = [4 7 5 8 6 9] ;% Obviously there are a lot of these with 9x9 conditions. There is nothing to stop us looking at
+      
+%complistA = [1 1 4]; % Comparisons. You compare one thing from a with one thing from b.So first comp is 1 v 2, then 1 v 3 etc...
+%complistB = [4 7 7] ;% Obviously there are a lot of these with 9x9 conditions. There is nothing to stop us looking at
+                                  % All of them but it might be nice to
+                                  % have some hypotheses. I'd be interested
+                                  % in classifying color rather than
+                                  % freq...
+                                  
+%complistA = [2 2 5];
+%complistB = [5 8 8];
 
-complistA = [1 1 1 1 1 2 2]; % Comparisons. You compare one thing from a with one thing from b.So first comp is 1 v 2, then 1 v 3 etc...
-complistB = [2 3 4 5 6 3 5] ;
+complistA = [3 3 6];
+complistB = [6 9 9];
+
 
 nComparisons=length(complistA);
 allmvpa = zeros(nComparisons,maxFrequency-1);  % matrix to store the MVPA results for each bootstrap
@@ -165,7 +169,7 @@ for comp = 1:nComparisons      % three comparisons
     tic % Time each condition...
     
     
-    for runno = 1:nbootstrapruns % Repeat the sampling over a large number of bootstrapped resamples of different averaged sets
+    parfor runno = 1:nbootstrapruns % Repeat the sampling over a large number of bootstrapped resamples of different averaged sets
         Aindices = randperm(totalsamples(1)); % Randomly permute the set of sample indices.
         Bindices = randperm(totalsamples(2));
         AdataCond = squeeze(alltrialsN(complistA(comp),:,:,:)); % Then pick out a set relevant to the conditions we are looking at right now.
@@ -181,17 +185,27 @@ for comp = 1:nComparisons      % three comparisons
         % very fast anyway....
         
         l=double(labels); % Everything going into liblinear must be a double
-        da=double(abs(datameanvectACond(:,:,:)));
-        db=double(abs(datameanvectBCond(:,:,:)));
+        if (complexFlag==1)
+            da=double(cat(2,real(datameanvectACond),imag(datameanvectACond)));
+            db=double(cat(2,real(datameanvectBCond),imag(datameanvectBCond)));
+        else
+            da=double(abs(datameanvectACond));
+            db=double(abs(datameanvectBCond));
+        end
+        
+
+        
+        % Here we allow complex numbers by essentially doubling the number
+        % of electrodes
+        
         for t = 1:(maxFrequency-1) % Time points
             
             
             
-            d=sparse(([da(:,:,t);db(:,:,t)])); % This is the way liblinear likes its inputs
-            
-            a=train(l,d,'-c 1 -v 5 -q');
-            %  q=evalc(c); % Doing this to avoid message to console.
-            %This calls liblinear's 'train' routine. Because we've asked to do kfold validation, this will simply return a single number in 'a' which is the classifier accuracy. Random chance is 50,
+            d=(([da(:,:,t);db(:,:,t)])); % This is the way liblinear likes its inputs
+            d=zscore(d,[],2)
+            a=libsvmtrain(l,d,'-c 1 -v 5 -q');
+               %This calls liblinear's 'train' routine. Because we've asked to do kfold validation, this will simply return a single number in 'a' which is the classifier accuracy. Random chance is 50,
             
             allKFoldLoss(comp,runno,t)=a; % Keep track of each bootstrap iteration's accuracy
             

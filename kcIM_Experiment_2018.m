@@ -40,22 +40,22 @@ end
 
 
 runningonVP=0;
-whereRunning = 'demo'
-switch whereRunning
-
-    case 'vp'
-    % - Running on VP -
-    cd('/Users/tyrion/Documents/MATLAB/Miaomiao/KoniocellularEEG');
-    params=displayParamsVP;
-    case 'demo'
-            params=displayParamsMac;
-
-    case 'erose'
-    
+% whereRunning = 'demo'
+% switch whereRunning
+% 
+%     case 'vp'
+%     % - Running on VP -
+%     cd('/Users/tyrion/Documents/MATLAB/Miaomiao/KoniocellularEEG');
+%     params=displayParamsVP;
+%     case 'demo'
+%             params=displayParamsMac;
+% 
+%     case 'erose'
+%     
     % - Running on Eleanore-Rose -
     cd('/Users/miaomiaoyu/Documents/GitHub/NeuralOscillations');
     params=displayParamsMac;
-end
+%end
 
 PPD=mmy_Calculate_PPD(params.distance, params.dimensions(2), ...
     params.numPixels(2));
