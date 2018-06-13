@@ -5,6 +5,7 @@ function outData=arw_analyseSSVEP_MM_LibSVM(varargin)
 %    EEGpath=varargin{3};
 %    complexFlag=varargin{4};
 %    nbootstrapruns=varargin{5};
+%     compArray=varargin{6};
 % script to do basic analysis of EEG data and (optionally) MVPA
 % Now requires access to the mex files from the liblinear package (see also libsvm)
 % https://www.csie.ntu.edu.tw/~cjlin/liblinear/
@@ -23,6 +24,7 @@ if nargin
     EEGpath=varargin{3};
     complexFlag=varargin{4};
     nbootstrapruns=varargin{5};
+    compArray=varargin{6};
 else
     error('No inputs');
 end
@@ -132,8 +134,10 @@ nsamplespermean = 5;       % must divide into 105 as an integer. We will chop th
 
 % MMY- Here let us know what the condition codes mean...
 
-complistA = [3 3 6];
-complistB = [6 9 9];
+complistA = compArray(1,:);
+
+complistB = compArray(2,:);
+
 
 
 nComparisons=length(complistA);

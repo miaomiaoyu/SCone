@@ -19,11 +19,12 @@ end
 sList={'AN', 'ARW', 'FS' , 'GV' , 'JT' , 'LH',  'MS',  'MTS',  'MY',  'PY',  'RM' , 'SP',  'WD'};
 
  % We leave one out because they don't have enough trials.
+compArray=[1 1 4;4 7 7]+1;
 
 for thisSub=1:length(sList)
     fprintf('\nRunning subject %s : %d of %d\n',sList{thisSub},thisSub,length(sList));
     
-    dataOut(thisSub)=arw_analyseSSVEP_MM_LibSVM(sList{thisSub},1,EEGpath,0,100); 
+    dataOut(thisSub)=arw_analyseSSVEP_MM_LibSVM(sList{thisSub},1,EEGpath,1,100,compArray); 
    % subj = varargin{1};
    % processfiles = varargin{2};
    % EEGpath=varargin{3};
@@ -44,7 +45,7 @@ se=squeeze(std(mLine))/sqrt(length(dataOut));
 
 
 figure(13); hold off;
-fc=hsv(15);
+fc=[.4 0 0;0 0 0.4;.4 .4 0];
 nFreqs=size(gm,2);
 
 for t=1:3
@@ -62,7 +63,7 @@ ylabel('Percent correct (%)');
 %% --------
 
 figure(12); hold off;
-fc=hsv(15);
+
 clear sigPoints;
 for t=1:size(mLine,2)
     sigPoints{t}=d_doclustercorr((squeeze(mLine(:,t,:))/100), 1, .5, .05, 1000);
