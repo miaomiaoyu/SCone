@@ -1,5 +1,10 @@
-function outData=arw_analyseERPdataMMLibSVM(varargin)
+function outData=arw_analyseSSVEP_MM_LibSVM(varargin)
 % function outData=arw_analyseERPdataMMLibLinearClean(varargin)
+%   subj = varargin{1};
+%    processfiles = varargin{2};
+%    EEGpath=varargin{3};
+%    complexFlag=varargin{4};
+%    nbootstrapruns=varargin{5};
 % script to do basic analysis of EEG data and (optionally) MVPA
 % Now requires access to the mex files from the liblinear package (see also libsvm)
 % https://www.csie.ntu.edu.tw/~cjlin/liblinear/
