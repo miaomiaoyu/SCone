@@ -23,13 +23,25 @@
 
 clear; close all;
 
-thisComputer = computer;
+computeName=char(java.net.InetAddress.getLocalHost.getHostName);
+if strcmp(computeName,'d2') % Are we on D2?
+    
+    EEGpath = '/wadelab_shared/Projects/NeuralOscillations//';
+else % Assume we are at YNiC
 
-if strcmp(thisComputer, 'MACI64')
-    curDir = ('/Users/miaomiaoyu/Documents/GitHub/NeuralOscillations');
-else
-    curDir = ('/wadelab_shared/Projects/NeuralOscillations');
+    EEGpath = '/groups/labs/wadelab/data/Miaomiao/NeuralOscillations//';
 end
+
+
+thisComputer = computer;
+% 
+% if strcmp(thisComputer, 'MACI64')
+%     curDir = ('/Users/miaomiaoyu/Documents/GitHub/NeuralOscillations');
+% else
+%     curDir = ('/wadelab_shared/Projects/NeuralOscillations');
+% end
+
+curDir=EEGpath;
 
 %% Additional Directories (..:: This is the bit you change! ::..)
 
@@ -329,11 +341,11 @@ for thisFolderIndex = 1:length(resultsSubFolders)
     
     [rPath, rName, rExt]=fileparts(resultsSubFolders(thisFolderIndex).name);
     
-    if contains(rName, '_Coh')
+    if strfind(rName, '_Coh')
         allCohResults(:,:,cohFileIndex) = allCohPowerSpect;
         cohFileIndex = cohFileIndex+1;
         
-    elseif contains(rName, '_InCoh')
+    elseif strfind(rName, '_InCoh')
         allIncohResults(:,:,incohFileIndex)=allIncohPowerSpect;
         incohFileIndex=incohFileIndex+1;
         
@@ -353,7 +365,10 @@ avgIncohResults=mean(allIncohResults, 3);
 %% figures
 
 orderForFig=[1 4 7 2 5 8 3 6 9];
-
+for thisPT=1:9
+    newPT{thisPT}=plotTitle{orderForFig(thisPT)};
+end
+    
 avgCohResults=avgCohResults(orderForFig,:);
 avgIncohResults=avgIncohResults(orderForFig,:);
 
@@ -361,7 +376,7 @@ figure(100)
 for i = 1:length(condTriggers)
     s=subplot(3,3,i);
     bar(avgCohResults(i, myrange));
-    h=title(plotTitle{i});
+    h=title(newPT(i));
     set(h, 'Visible', 'on');
     
     linkaxes([s]);
@@ -374,13 +389,64 @@ figure(101)
 for i = 1:length(condTriggers)
     s=subplot(3,3,i);
     bar(avgIncohResults(i, myrange));
-    h=title(plotTitle{i});
+      h=title(newPT(i));
     set(h, 'Visible', 'on');
     
     linkaxes([s]);
     ylim([0 1])
 end
 saveas(gcf, 'Fig_101_Incoh_100Hz.pdf');
+
+size(avgIncohResults)
+%%
+figure(102);
+
+RGMinusLum16=avgIncohResults(9,(2:150))-avgIncohResults(3,(2:150));
+SMinusLum16=avgIncohResults(6,(2:150))-avgIncohResults(3,(2:150));
+SMinusRG16=avgIncohResults(6,(2:150))-avgIncohResults(9,(2:150));
+
+RGMinusLum12=avgIncohResults(8,(2:150))-avgIncohResults(2,(2:150));
+SMinusLum12=avgIncohResults(5,(2:150))-avgIncohResults(2,(2:150));
+SMinusRG12=avgIncohResults(5,(2:150))-avgIncohResults(8,(2:150));
+
+RGMinusLum5=avgIncohResults(7,(2:150))-avgIncohResults(1,(2:150));
+SMinusLum5=avgIncohResults(4,(2:150))-avgIncohResults(1,(2:150));
+SMinusRG5=avgIncohResults(4,(2:150))-avgIncohResults(7,(2:150));
+
+subplot(3,1,1);
+bar(RGMinusLum16);
+subplot(3,1,2);
+bar(SMinusLum16,'b');
+subplot(3,1,3);
+bar(SMinusRG16,'g');
+
+figure(103);
+
+subplot(3,1,1);
+bar(RGMinusLum5);
+subplot(3,1,2);
+bar(SMinusLum5,'b');
+subplot(3,1,3);
+bar(SMinusRG5,'g');
+
+figure(104);
+
+subplot(3,1,1);
+bar(RGMinusLum12);
+subplot(3,1,2);
+bar(SMinusLum12,'b');
+subplot(3,1,3);
+bar(SMinusRG12,'g');
+
+
+
+
+sumPower=squeeze(sum(avgIncohResults(:,80:120),2));
+figure(105);
+imagesc(reshape(sumPower,3,3));
+colorbar;
+
+
 
 %% T-Test!
 
