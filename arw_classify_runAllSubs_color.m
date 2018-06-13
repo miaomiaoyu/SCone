@@ -14,7 +14,7 @@ sList={'AN', 'ARW', 'FS' , 'GV' , 'JT' , 'LH',  'MS',  'MTS',  'MY',  'PY',  'RM
 for thisSub=1:length(sList)
     fprintf('\nRunning subject %s : %d of %d\n',sList{thisSub},thisSub,length(sList));
     
-    dataOut(thisSub)=arw_analyseERPdataMMLibSVM(sList{thisSub},1,EEGpath,0,100); 
+    dataOut(thisSub)=arw_analyseSSVEP_MM_LibSVM(sList{thisSub},1,EEGpath,0,100); 
    % subj = varargin{1};
    % processfiles = varargin{2};
    % EEGpath=varargin{3};
