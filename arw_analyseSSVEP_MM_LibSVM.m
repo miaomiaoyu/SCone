@@ -131,23 +131,6 @@ tic
 nsamplespermean = 5;       % must divide into 105 as an integer. We will chop the fft  into lumps of 5 bins, average them and compute classificaiotn.
 
 % MMY- Here let us know what the condition codes mean...
-<<<<<<< HEAD:arw_analyseERPdataMMLibSVM.m
-%complistA = [1 1 2 2 3 3]; % Comparisons. You compare one thing from a with one thing from b.So first comp is 1 v 2, then 1 v 3 etc...
-%complistB = [4 7 5 8 6 9] ;% Obviously there are a lot of these with 9x9 conditions. There is nothing to stop us looking at
-      
-%complistA = [1 1 4]; % Comparisons. You compare one thing from a with one thing from b.So first comp is 1 v 2, then 1 v 3 etc...
-%complistB = [4 7 7] ;% Obviously there are a lot of these with 9x9 conditions. There is nothing to stop us looking at
-=======
-complistA = [1 1 4]+2; % Comparisons. You compare one thing from a with one thing from b.So first comp is 1 v 2, then 1 v 3 etc...
-complistB = [4 7 7]+2 ;
->>>>>>> da7ca52b90c5be2a283c728c157817284ff79ec3:arw_analyseERPdataMMLiblinearCleanComplex.m
-                                  % All of them but it might be nice to
-                                  % have some hypotheses. I'd be interested
-                                  % in classifying color rather than
-                                  % freq...
-                                  
-%complistA = [2 2 5];
-%complistB = [5 8 8];
 
 complistA = [3 3 6];
 complistB = [6 9 9];
