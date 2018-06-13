@@ -2,7 +2,16 @@ close all;
 clear all
 
 aStart=now;
-EEGpath = '/groups/labs/wadelab/data/Miaomiao/NeuralOscillations/Koniocellular/KCIM_EEG/';
+
+computeName=char(java.net.InetAddress.getLocalHost.getHostName);
+if strcmp(computeName,'d2') % Are we on D2?
+    
+    EEGpath = '/wadelab_shared/Projects/NeuralOscillations/Koniocellular/KCIM_EEG/';
+else % Assume we are at YNiC
+
+    EEGpath = '/groups/labs/wadelab/data/Miaomiao/NeuralOscillations/Koniocellular/KCIM_EEG/';
+end
+
 %EEGpath =
 %'/Users/miaomiaoyu/Documents/GitHub/NeuralOscillations/Koniocellular/KCIM_EEG/';
 %EEGpath= 'R:\People\mm\Matlab_Directory_MY_Window\NeuralOscillations\Koniocellular\KCIM_EEG\'
