@@ -20,7 +20,7 @@ sList={'AN', 'ARW', 'FS' , 'GV' , 'JT' , 'LH',  'MS',  'MTS',  'MY',  'PY',  'RM
 
  % We leave one out because they don't have enough trials.
 compArray=[1 1 4;4 7 7]+1;
-
+ %
 for thisSub=1:length(sList)
     fprintf('\nRunning subject %s : %d of %d\n',sList{thisSub},thisSub,length(sList));
     

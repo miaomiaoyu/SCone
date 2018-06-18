@@ -17,7 +17,7 @@ function outData=arw_analyseSSVEP_MM_LibSVM(varargin)
 maxFrequency=150; % Look from 1Hz up to this point...
 junkBins=1;
 goodBins=11;
-%
+% c
 if nargin
     subj = varargin{1};
     processfiles = varargin{2};
