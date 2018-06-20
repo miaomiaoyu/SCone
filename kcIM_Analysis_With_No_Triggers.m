@@ -566,8 +566,8 @@ reshapeIncoh=reshape(allIncohResults, [3,3,1000,16]);
 % RG 12
 % RG 16
 
-reshapeCoh=mmy_Remove_Harmonic_Powers(reshapeCoh, inputFreq, maxFreq);
-reshapeIncoh=mmy_Remove_Harmonic_Powers(reshapeIncoh, inputFreq, maxFreq);
+reshapeCoh=mmy_Remove_Harmonic_Powers(reshapeCoh, [inputFreq], maxFreq);
+reshapeIncoh=mmy_Remove_Harmonic_Powers(reshapeIncoh, [inputFreq], maxFreq);
 
 
 outputCoh=mmy_Mean_Endogenous_Power(reshapeCoh); % 3 colors * 5 avg powers of 5 endo bands * 16 subjects

@@ -16,7 +16,7 @@ for subjNo=1:nSubj
     for freqNo=1:length(inputFreq)
         
         harmonicInterval=1:(maxOutputFreq/inputFreq(freqNo)); %harmonics for each input freq
-        harmonicFreq=inputFreq(freqNo)*harmonicInterval;
+        harmonicFreq=[inputFreq(freqNo)*harmonicInterval,50];
 
         for i=1:length(harmonicFreq)   
             meanEEGPowers(freqNo,:,harmonicFreq(i)+1,subjNo)=0;
