@@ -24,7 +24,7 @@ endoHz={alphaHz,betaHz,gammaHz,deltaHz,thetaHz};
 for subjNo=1:nSubj
     for typeNo=1:length(endoHz)
         for colorNo=1:nColor
-            meanEEGPowerRange=meanEEGPowers(:, colorNo, endoHz{typeNo}+1, subjNo);
+            meanEEGPowerRange=meanEEGPowers(:, colorNo, endoHz{typeNo}, subjNo);
             
             meanEEGPowerRangeColor=squeeze(meanEEGPowerRange); % squeeze out the redundant Freq column.
             
