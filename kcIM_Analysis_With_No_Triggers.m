@@ -25,10 +25,10 @@ clear; close all;
 
 % computeName=char(java.net.InetAddress.getLocalHost.getHostName);
 % if strcmp(computeName,'d2') % Are we on D2?
-%     
+%
 %     EEGpath = '/wadelab_shared/Projects/NeuralOscillations//';
 % else % Assume we are at YNiC
-% 
+%
 %     EEGpath = '/groups/labs/wadelab/data/Miaomiao/NeuralOscillations//';
 % end
 
@@ -155,14 +155,14 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
     floorDataPoints=mean(EEG.data(chansToAnalyse, 1:nDataPoints));
     
     blinkPoints=EEG.data(end, 1:nDataPoints);
-%     
-%     zsIndices = mmy_Noise_Extraction_Zscore(blinkPoints, zsLimit, displayFig);
-%     sumBps = mmy_Noise_Per_Bin(zsIndices, zsLimit, nDataPoints, EEG.rate/2, exptEndTime*2);
-%     
-%     %[trashBits, zsIndices, sumBPS]=mmy_Noise_Extraction_Zscore(blinkPoints, zsLimit, nDataPoints, ...
-%     %binSize, nDataPoints/binSize, displayFig);
-%     
-%      floorDataPoints(trashBits) = nan;
+    %
+    %     zsIndices = mmy_Noise_Extraction_Zscore(blinkPoints, zsLimit, displayFig);
+    %     sumBps = mmy_Noise_Per_Bin(zsIndices, zsLimit, nDataPoints, EEG.rate/2, exptEndTime*2);
+    %
+    %     %[trashBits, zsIndices, sumBPS]=mmy_Noise_Extraction_Zscore(blinkPoints, zsLimit, nDataPoints, ...
+    %     %binSize, nDataPoints/binSize, displayFig);
+    %
+    %      floorDataPoints(trashBits) = nan;
     
     % If the error's regarding reshape elements must not change - check
     % that you've got the right binSize (y/2) and exptEndTime (z*2).
@@ -288,7 +288,7 @@ for thisFolderIndex=3:length(dirPath) % This loops through each participant.
         'Lum 12', 'S Cone 12', 'RG 12',...
         'Lum 16', 'S cone 16', 'RG 16'};
     
-   
+    
     displayFigure = 0;
     
     if displayFigure
@@ -359,115 +359,224 @@ end
 avgCohResults=mean(allCohResults, 3);
 avgIncohResults=mean(allIncohResults, 3);
 
+%%             Figures for Publishing:
+%
+%     |   LUM 5   |   SCONE 5   |   RG 5   |
+%     |   LUM 12  |   SCONE 12  |   RG 12  |
+%     |   LUM 16  |   SCONE 16  |   RG 16  |
 
+plotTitle = {'Lum 5', 'S Cone 5', 'RG 5',...
+    'Lum 12', 'S Cone 12', 'RG 12',...
+    'Lum 16', 'S cone 16', 'RG 16'};
 
-
-%% figures
+% for thisPT=1:9
+%     newPT{thisPT}=plotTitle{orderForFig(thisPT)};
+% end
 
 orderForFig=[1 4 7 2 5 8 3 6 9];
-for thisPT=1:9
-    newPT{thisPT}=plotTitle{orderForFig(thisPT)};
-end
-    
+
 avgCohResults=avgCohResults(orderForFig,:);
 avgIncohResults=avgIncohResults(orderForFig,:);
 
 figure(100)
+
 for i = 1:length(condTriggers)
     s=subplot(3,3,i);
     bar(avgCohResults(i, myrange));
-    h=title(newPT(i));
+    h=title(plotTitle{i});
     set(h, 'Visible', 'on');
     
     linkaxes([s]);
     ylim([0 0.6])
     
 end
-saveas(gcf, 'Fig_100_Coh_100Hz.pdf');
+
+%saveas(gcf, 'Fig_100_Coh_100Hz.pdf');
 
 figure(101)
+
 for i = 1:length(condTriggers)
     s=subplot(3,3,i);
     bar(avgIncohResults(i, myrange));
-      h=title(newPT(i));
+    h=title(plotTitle{i});
     set(h, 'Visible', 'on');
-    
     linkaxes([s]);
     ylim([0 1])
 end
-saveas(gcf, 'Fig_101_Incoh_100Hz.pdf');
 
-size(avgIncohResults)
-%%
+%saveas(gcf, 'Fig_101_Incoh_100Hz.pdf');
+
+%% THIS IS THE BIT YOU CHANGE!
+
 figure(102);
 
-RGMinusLum16=avgIncohResults(9,(2:150))-avgIncohResults(3,(2:150));
-SMinusLum16=avgIncohResults(6,(2:150))-avgIncohResults(3,(2:150));
-SMinusRG16=avgIncohResults(6,(2:150))-avgIncohResults(9,(2:150));
+outputRange=2:70; % used to be 2:150
 
-RGMinusLum12=avgIncohResults(8,(2:150))-avgIncohResults(2,(2:150));
-SMinusLum12=avgIncohResults(5,(2:150))-avgIncohResults(2,(2:150));
-SMinusRG12=avgIncohResults(5,(2:150))-avgIncohResults(8,(2:150));
+rsCoh=reshape(avgCohResults, [3,3,1000]);
+rsIncoh=reshape(avgIncohResults, [3,3,1000]);
 
-RGMinusLum5=avgIncohResults(7,(2:150))-avgIncohResults(1,(2:150));
-SMinusLum5=avgIncohResults(4,(2:150))-avgIncohResults(1,(2:150));
-SMinusRG5=avgIncohResults(4,(2:150))-avgIncohResults(7,(2:150));
+% avgCohResults               %  rsCoh
+% ------------------------------------------------
+% lum 5                 lum 5  | scone 5  |  RG 5
+% lum 12                lum 12 | scone 12 |  RG 12
+% lum 16                lum 16 | scone 16 |  RG 16
+% scone 5
+% scone 12
+% scone 16
+% RG 5
+% RG 12
+% RG 16
 
-subplot(3,1,1);
-bar(RGMinusLum16);
-subplot(3,1,2);
-bar(SMinusLum16,'b');
-subplot(3,1,3);
-bar(SMinusRG16,'g');
-
-figure(103);
-
-subplot(3,1,1);
-bar(RGMinusLum5);
-subplot(3,1,2);
-bar(SMinusLum5,'b');
-subplot(3,1,3);
-bar(SMinusRG5,'g');
-
-figure(104);
-
-subplot(3,1,1);
-bar(RGMinusLum12);
-subplot(3,1,2);
-bar(SMinusLum12,'b');
-subplot(3,1,3);
-bar(SMinusRG12,'g');
+compA=[3 2 3];   % i.e. 3-1 => RG - lum
+compB=[1 1 2];   %      2-1 => S - lum
+                 %      3-2 => RG - S
 
 
+for freqNo=1:3 % we'll only deal with one frequency at a time
+    for compNo=1:3  % subtracting powers from diff colours from each other
+        diffPowerCoh(freqNo,compNo,:)=rsCoh(freqNo,compA(compNo),outputRange)-rsCoh(freqNo,compB(compNo),outputRange);
+        diffPowerIncoh(freqNo,compNo,:)=rsIncoh(freqNo,compA(compNo),outputRange)-rsIncoh(freqNo,compB(compNo),outputRange);
+    end
+end
+        
+freqTitle={'6 Hz', '12 Hz', '18 Hz'};
+diffTitle={'RG - lum', 'S - lum', 'RG - S'};
 
+for freqNo=1:3
+    figure()     % 1-3 Coh: produces 2 figures showing differences..
+    h=title(freqTitle{freqNo});
+    set(h, 'Visible', 'on');
+    for compNo=1:3
+        subplot(3,1,compNo)
+        bar(squeeze(diffPowerCoh(freqNo,compNo,:)));
+        h=title(diffTitle{compNo});
+        set(h, 'Visible', 'on');
+    end
+end
 
-sumPower=squeeze(sum(avgIncohResults(:,80:120),2));
+for freqNo=1:3
+    figure()     % 4-6 Incoh
+    h=title(freqTitle{freqNo});
+    set(h, 'Visible', 'on');
+    for compNo=1:3
+        subplot(3,1,compNo)
+        bar(squeeze(diffPowerIncoh(freqNo,compNo,:)));
+        h=title(diffTitle{compNo});
+        set(h, 'Visible', 'on');
+    end
+end
+
+sumPowerCoh=squeeze(sum(avgCohResults(:,outputRange),2));
+sumPowerIncoh=squeeze(sum(avgIncohResults(:,outputRange),2));
+
 figure(105);
-imagesc(reshape(sumPower,3,3));
+
+subplot(2,1,1)
+im=imagesc(reshape(sumPowerCoh,[3,3]));
+colormap(flipud(gray(256)));
 colorbar;
 
+%j= insertText(im, [100 315], 'pepe');
+%imshow(j);
+
+subplot(2,1,2)
+im=imagesc(reshape(sumPowerIncoh,[3,3]));
+
+colormap(flipud(gray(256)));
+colorbar;
+
+% RGMinusLum16=avgIncohResults(9,(2:150))-avgIncohResults(3,(2:150));
+% SMinusLum16=avgIncohResults(6,(2:150))-avgIncohResults(3,(2:150));
+% SMinusRG16=avgIncohResults(6,(2:150))-avgIncohResults(9,(2:150));
+% 
+% RGMinusLum12=avgIncohResults(8,(2:150))-avgIncohResults(2,(2:150));
+% SMinusLum12=avgIncohResults(5,(2:150))-avgIncohResults(2,(2:150));
+% SMinusRG12=avgIncohResults(5,(2:150))-avgIncohResults(8,(2:150));
+% 
+% RGMinusLum5=avgIncohResults(7,(2:150))-avgIncohResults(1,(2:150));
+% SMinusLum5=avgIncohResults(4,(2:150))-avgIncohResults(1,(2:150));
+% SMinusRG5=avgIncohResults(4,(2:150))-avgIncohResults(7,(2:150));
+%
+% 
+% figure(103);
+% 
+% title('5 Hz');
+% subplot(3,1,1);
+% bar(RGMinusLum5);
+%     h=title(diffTitle{1});
+%     set(h, 'Visible', 'on');
+% subplot(3,1,2);
+% bar(SMinusLum5,'b');
+%     h=title(diffTitle{2});
+%     set(h, 'Visible', 'on');
+% subplot(3,1,3);
+% bar(SMinusRG5,'g');
+%     h=title(diffTitle{3});
+%     set(h, 'Visible', 'on');
+% 
+% figure(104);
+% title('12 Hz');
+% subplot(3,1,1);
+% bar(RGMinusLum12);
+%     h=title(diffTitle{1});
+%     set(h, 'Visible', 'on');
+% subplot(3,1,2);
+% bar(SMinusLum12,'b');
+%     h=title(diffTitle{2});
+%     set(h, 'Visible', 'on');
+% subplot(3,1,3);
+% bar(SMinusRG12,'g');
+%     h=title(diffTitle{3});
+%     set(h, 'Visible', 'on');
+% 
+% subplot(3,1,1);
+% title('16 Hz');
+% bar(RGMinusLum16);
+%     h=title(diffTitle{1});
+%     set(h, 'Visible', 'on');
+%     
+% subplot(3,1,2);
+% bar(SMinusLum16,'b');
+%     h=title(diffTitle{2});
+%     set(h, 'Visible', 'on');
+%     
+% subplot(3,1,3);
+% bar(SMinusRG16,'g');
+%     h=title(diffTitle{3});
+%     set(h, 'Visible', 'on');
 
 
-%% T-Test!
+%% Grouping powers by endogenous frequency range
 
-% for conditionNo = 1:3
-%
-%     [h1,p1]=ttest2(avgCohResults(conditionNo,:), avgCohResults(conditionNo+3,:));
-%     [h2,p2]=ttest2(avgCohResults(conditionNo,:), avgCohResults(conditionNo+6,:));
-%
-%     [h3,p3]=ttest2(avgIncohResults(conditionNo,:), avgIncohResults(conditionNo+3,:));
-%     [h4,p4]=ttest2(avgIncohResults(conditionNo,:), avgIncohResults(conditionNo+6,:));
-%
-%     disp(h1)
-%     disp(p1)
-%     disp(h2)
-%     disp(p2)
-%     disp(h3)
-%     disp(p3)
-%     disp(h4)
-%     disp(p4)
-%
-% end
+inputFreq=[5, 12, 16];
+maxFreq = 150; % the maximum freq we're working with here.
+
+reshapeCoh=reshape(allCohResults, [3,3,1000,16]);
+reshapeIncoh=reshape(allIncohResults, [3,3,1000,16]);
+
+% allCohResults               %reshapeCoh
+% ------------------------------------------------
+% lum 5                 lum 5  | scone 5  |  RG 5
+% lum 12                lum 12 | scone 12 |  RG 12
+% lum 16                lum 16 | scone 16 |  RG 16
+% scone 5
+% scone 12
+% scone 16
+% RG 5
+% RG 12
+% RG 16
+
+reshapeCoh=mmy_Remove_Harmonic_Powers(reshapeCoh, inputFreq, maxFreq);
+reshapeIncoh=mmy_Remove_Harmonic_Powers(reshapeIncoh, inputFreq, maxFreq);
+
+
+outputCoh=mmy_Mean_Endogenous_Power(reshapeCoh); % 3 colors * 5 avg powers of 5 endo bands * 16 subjects
+outputIncoh=mmy_Mean_Endogenous_Power(reshapeIncoh);
+
+outputCohRS=reshape(outputCoh, [15,16])'; % reshape for SPSS ANOVA testing...
+outputIncohRS=reshape(outputIncoh, [15,16])';
+
+
 
 %% One-Way Repeated Measures ANOVA
 
@@ -479,7 +588,7 @@ colorbar;
 oneF1Freq=[5 12 16];
 twoF1Freq=[oneF1Freq*2];
 
-inputFreqs=[{'5 Hz', '12 Hz', '16 Hz'}];
+inputFreq=[{'5 Hz', '12 Hz', '16 Hz'}];
 compType=[{'Lum v S-cone', 'Lum v L-M', 'S-cone v L-M'}];
 
 %% INCOHERENT RESULTS
