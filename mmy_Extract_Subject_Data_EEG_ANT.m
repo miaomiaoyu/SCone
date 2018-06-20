@@ -26,8 +26,9 @@ function EEG=mmy_Extract_Subject_Data_EEG_ANT(fileName,goodChans,doPlotFlag); % 
 EEG=processcnt3(fileName); % Calls another function called processcnt3.
 
 eventIndex=1;
-
+disp(fileName);
 for thisEvent=1:length(EEG.event)
+
     q=str2num(EEG.event(thisEvent).type);
     if (~isempty(q))
         EEG.eventList(eventIndex)=q;

@@ -24,14 +24,14 @@ endoHz={alphaHz,betaHz,gammaHz,deltaHz,thetaHz};
 for subjNo=1:nSubj
     for typeNo=1:length(endoHz)
         for colorNo=1:nColor
-            meanEEGPowerRange=meanEEGPowers(:, colorNo, endoHz{typeNo}, subjNo);
+            meanEEGPowerRange=meanEEGPowers(:, colorNo, endoHz{typeNo}+1, subjNo);
             
             meanEEGPowerRangeColor=squeeze(meanEEGPowerRange); % squeeze out the redundant Freq column.
             
             % meanEEGPowerRangeColor is 3 colors * endo freq band (4 for
             % delta, 5 for alpha)
                         
-            meanEEGPowerPerBand=mean(meanEEGPowerRangeColor,2); % mean across each frequency contained within an endogenous frequency band...
+            meanEEGPowerPerBand=sqrt(mean((abs(meanEEGPowerRangeColor).^2),2)); % mean across each frequency contained within an endogenous frequency band... RMS power
             
             % This should give you an averaged EEG power 
             %meanEEGPowerRange=squeeze(meanEEGPowerRange);

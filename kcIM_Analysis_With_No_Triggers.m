@@ -23,25 +23,25 @@
 
 clear; close all;
 
-% computeName=char(java.net.InetAddress.getLocalHost.getHostName);
-% if strcmp(computeName,'d2') % Are we on D2?
-%
-%     EEGpath = '/wadelab_shared/Projects/NeuralOscillations//';
-% else % Assume we are at YNiC
-%
-%     EEGpath = '/groups/labs/wadelab/data/Miaomiao/NeuralOscillations//';
-% end
+computeName=char(java.net.InetAddress.getLocalHost.getHostName);
+if strcmp(computeName,'d2') % Are we on D2?
 
+    EEGpath = '/wadelab_shared/Projects/NeuralOscillations//';
+else % Assume we are at YNiC
 
-thisComputer = computer;
-
-if strcmp(thisComputer, 'MACI64')
-    curDir = ('/Users/miaomiaoyu/Documents/GitHub/NeuralOscillations');
-else
-    curDir = ('/wadelab_shared/Projects/NeuralOscillations');
+    EEGpath = '/groups/labs/wadelab/data/Miaomiao/NeuralOscillations//';
 end
 
-%curDir=EEGpath;
+% 
+% thisComputer = computer;
+% 
+% if strcmp(thisComputer, 'MACI64')
+%     curDir = ('/Users/miaomiaoyu/Documents/GitHub/NeuralOscillations');
+% else
+%     curDir = ('/wadelab_shared/Projects/NeuralOscillations');
+% end
+
+curDir=EEGpath;
 
 %% Additional Directories (..:: This is the bit you change! ::..)
 
