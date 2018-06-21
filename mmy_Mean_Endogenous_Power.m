@@ -16,10 +16,11 @@ nSubj=size(meanEEGPowers,4);
 alphaHz=8:12;
 betaHz=12:30;
 gammaHz=30:80;
-deltaHz=1:4;
+deltaHz=1:4;    % This has been excluded because the 1/f noise coincides with this
+                %frequency range and skews the results..
 thetaHz=4:8;
 
-endoHz={alphaHz,betaHz,gammaHz,deltaHz,thetaHz};
+endoHz={alphaHz,betaHz,gammaHz,thetaHz};
 
 for subjNo=1:nSubj
     for typeNo=1:length(endoHz)

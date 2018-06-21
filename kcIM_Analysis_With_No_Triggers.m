@@ -23,16 +23,20 @@
 
 clear; close all;
 
-computeName=char(java.net.InetAddress.getLocalHost.getHostName);
+ computeName=char(java.net.InetAddress.getLocalHost.getHostName);
 if strcmp(computeName,'d2') % Are we on D2?
 
     EEGpath = '/wadelab_shared/Projects/NeuralOscillations//';
-else % Assume we are at YNiC
 
+elseif strcmp(computeName, 'nas10-240-125-18.york.ac.uk')  % Are we on Miaomiao's mac?
+    EEGpath = ('/Users/miaomiaoyu/Documents/GitHub/NeuralOscillations');
+% Assume we are at YNiC
+else
     EEGpath = '/groups/labs/wadelab/data/Miaomiao/NeuralOscillations//';
+
 end
 
-% 
+
 % thisComputer = computer;
 % 
 % if strcmp(thisComputer, 'MACI64')
@@ -410,7 +414,7 @@ end
 
 figure(102);
 
-outputRange=2:70; % used to be 2:150
+outputRange=2:100; % used to be 2:150
 
 rsCoh=reshape(avgCohResults, [3,3,1000]);
 rsIncoh=reshape(avgIncohResults, [3,3,1000]);
@@ -485,67 +489,6 @@ im=imagesc(reshape(sumPowerIncoh,[3,3]));
 colormap(flipud(gray(256)));
 colorbar;
 
-% RGMinusLum16=avgIncohResults(9,(2:150))-avgIncohResults(3,(2:150));
-% SMinusLum16=avgIncohResults(6,(2:150))-avgIncohResults(3,(2:150));
-% SMinusRG16=avgIncohResults(6,(2:150))-avgIncohResults(9,(2:150));
-% 
-% RGMinusLum12=avgIncohResults(8,(2:150))-avgIncohResults(2,(2:150));
-% SMinusLum12=avgIncohResults(5,(2:150))-avgIncohResults(2,(2:150));
-% SMinusRG12=avgIncohResults(5,(2:150))-avgIncohResults(8,(2:150));
-% 
-% RGMinusLum5=avgIncohResults(7,(2:150))-avgIncohResults(1,(2:150));
-% SMinusLum5=avgIncohResults(4,(2:150))-avgIncohResults(1,(2:150));
-% SMinusRG5=avgIncohResults(4,(2:150))-avgIncohResults(7,(2:150));
-%
-% 
-% figure(103);
-% 
-% title('5 Hz');
-% subplot(3,1,1);
-% bar(RGMinusLum5);
-%     h=title(diffTitle{1});
-%     set(h, 'Visible', 'on');
-% subplot(3,1,2);
-% bar(SMinusLum5,'b');
-%     h=title(diffTitle{2});
-%     set(h, 'Visible', 'on');
-% subplot(3,1,3);
-% bar(SMinusRG5,'g');
-%     h=title(diffTitle{3});
-%     set(h, 'Visible', 'on');
-% 
-% figure(104);
-% title('12 Hz');
-% subplot(3,1,1);
-% bar(RGMinusLum12);
-%     h=title(diffTitle{1});
-%     set(h, 'Visible', 'on');
-% subplot(3,1,2);
-% bar(SMinusLum12,'b');
-%     h=title(diffTitle{2});
-%     set(h, 'Visible', 'on');
-% subplot(3,1,3);
-% bar(SMinusRG12,'g');
-%     h=title(diffTitle{3});
-%     set(h, 'Visible', 'on');
-% 
-% subplot(3,1,1);
-% title('16 Hz');
-% bar(RGMinusLum16);
-%     h=title(diffTitle{1});
-%     set(h, 'Visible', 'on');
-%     
-% subplot(3,1,2);
-% bar(SMinusLum16,'b');
-%     h=title(diffTitle{2});
-%     set(h, 'Visible', 'on');
-%     
-% subplot(3,1,3);
-% bar(SMinusRG16,'g');
-%     h=title(diffTitle{3});
-%     set(h, 'Visible', 'on');
-
-
 %% Grouping powers by endogenous frequency range
 
 inputFreq=[5, 12, 16];
@@ -569,13 +512,61 @@ reshapeIncoh=reshape(allIncohResults, [3,3,1000,16]);
 reshapeCoh=mmy_Remove_Harmonic_Powers(reshapeCoh, [inputFreq], maxFreq);
 reshapeIncoh=mmy_Remove_Harmonic_Powers(reshapeIncoh, [inputFreq], maxFreq);
 
+% = this is just to make some figures... not important to ANOVA
+% make sure the input frequencies are taken out...
 
+figure(106)
+
+reshapeCohFig=reshape(reshapeCoh, [9, 1000, 16]);
+reshapeIncohFig=reshape(reshapeIncoh, [9, 1000, 16]);
+
+for i = 1:16
+    rsCohFig(:,:,i) = reshapeCohFig(orderForFig,:,i);
+    rsIncohFig(:,:,i) = reshapeIncohFig(orderForFig,:,i);
+end
+
+for i = 1:length(condTriggers)
+    s=subplot(3,3,i);
+    bar(rsCohFig(i, myrange));
+    h=title(plotTitle{i});
+    set(h, 'Visible', 'on');
+    linkaxes([s]);
+    ylim([0 1])
+end
+
+figure(107)
+
+for i = 1:length(condTriggers)
+    s=subplot(3,3,i);
+    bar(rsIncohFig(i, myrange));
+    h=title(plotTitle{i});
+    set(h, 'Visible', 'on');
+    linkaxes([s]);
+    ylim([0 1])
+end
+
+% ========================================================================
+
+% gets the RMS of each endo band...
 outputCoh=mmy_Mean_Endogenous_Power(reshapeCoh); % 3 colors * 5 avg powers of 5 endo bands * 16 subjects
-outputIncoh=mmy_Mean_Endogenous_Power(reshapeIncoh);
+outputIncoh=mmy_Mean_Endogenous_Power(reshapeIncoh); 
 
-outputCohRS=reshape(outputCoh, [15,16])'; % reshape for SPSS ANOVA testing...
-outputIncohRS=reshape(outputIncoh, [15,16])';
+outputCohSPSS=reshape(outputCoh, [12,16])'; % reshape for SPSS ANOVA testing...
+outputIncohSPSS=reshape(outputIncoh, [12,16])';
 
+%% Drawing line graphs
+
+meanOIncoh=mean(outputIncohSPSS);   meanOIncoh=reshape(meanOIncoh,[3 4]);
+sdOIncoh=std(outputIncohSPSS);  sdOIncoh=reshape(sdOIncoh,[3 4]);
+
+figure()
+for endoBand=1:4
+    errorbar(1:3, meanOIncoh(:,endoBand), sdOIncoh(:,endoBand)); hold on;
+end
+
+xlim([0.5 3.5]);
+ylabel({'RMS of EEG Power'});
+legend('Alpha: 8-12 Hz', 'Beta: 12-30 Hz', 'Gamma: 30-80 Hz', 'Theta: 4-8 Hz');
 
 
 %% One-Way Repeated Measures ANOVA
