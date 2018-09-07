@@ -173,7 +173,7 @@ for comp = 1:nComparisons      % three comparisons
         BdataCond = squeeze(alltrialsN(complistB(comp),:,:,:));
         
         datameanvectACond=(squeeze(mean(reshape(AdataCond(Aindices,:),nsamplespermean,M(1),64,(maxFrequency-1)))));
-        datameanvectBCond=(squeeze(mean(reshape(BdataCond(Aindices,:),nsamplespermean,M(2),64,(maxFrequency-1)))));
+        datameanvectBCond=(squeeze(mean(reshape(BdataCond(Bindices,:),nsamplespermean,M(2),64,(maxFrequency-1)))));
         %c=sprintf('a=train(l,d,''-c 1 -v 5 -q'')'); % This sets up the call to 'train' (which is part of the nice mex file liblinear). Note we make it a string so that we can call it with 'eval' so that we can catch output to console. I might edit the mex file to make this unnecessary..
         % Note also - you might feel tempted to use the -n option to
         % increase the number of threads on a multi-cpu machine. As far

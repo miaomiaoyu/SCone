@@ -435,7 +435,6 @@ compA=[3 2 3];   % i.e. 3-1 => RG - lum
 compB=[1 1 2];   %      2-1 => S - lum
                  %      3-2 => RG - S
 
-
 for freqNo=1:3 % we'll only deal with one frequency at a time
     for compNo=1:3  % subtracting powers from diff colours from each other
         diffPowerCoh(freqNo,compNo,:)=rsCoh(freqNo,compA(compNo),outputRange)-rsCoh(freqNo,compB(compNo),outputRange);
@@ -555,19 +554,48 @@ outputCohSPSS=reshape(outputCoh, [12,16])'; % reshape for SPSS ANOVA testing...
 outputIncohSPSS=reshape(outputIncoh, [12,16])';
 
 %% Drawing line graphs
-
-meanOIncoh=mean(outputIncohSPSS);   meanOIncoh=reshape(meanOIncoh,[3 4]);
+%% MY - This bit now computes SEMs...
+meanOIncoh=mean(outputIncohSPSS);  
+reshapedOutput=reshape(outputIncohSPSS,[16,3,4]);
+meanOIncoh=reshape(meanOIncoh,[3 4]);
 sdOIncoh=std(outputIncohSPSS);  sdOIncoh=reshape(sdOIncoh,[3 4]);
+semIncoh=sdOIncoh/sqrt(size(outputIncohSPSS,1));
+% figure(201)
+% for endoBand=1:4
+%     errorbar(1:3, meanOIncoh(:,endoBand), semIncoh(:,endoBand)); hold on;
+% end
+% xlim([0.5 3.5]);
+% ylabel({'RMS of EEG Power'});
+% legend('Alpha: 8-12 Hz', 'Beta: 12-30 Hz', 'Gamma: 30-80 Hz', 'Theta: 4-8 Hz');
 
-figure()
-for endoBand=1:4
-    errorbar(1:3, meanOIncoh(:,endoBand), sdOIncoh(:,endoBand)); hold on;
+figure(200)
+hold off
+cList=[.1 .1 .1;.7 .3 .3;.1 .5 .7];
+for thisColor=1:3
+    % NB we reorder the fBands to plot them as monotonically increasing 
+    eb(thisColor)=errorbar(1:4, meanOIncoh(thisColor,[4 1 2 3])', semIncoh(thisColor,[4 1 2 3])'); hold on;
+    set(eb(thisColor),'LineWidth',2);
+    set(eb(thisColor),'Color',cList(thisColor,:));
 end
-
-xlim([0.5 3.5]);
 ylabel({'RMS of EEG Power'});
-legend('Alpha: 8-12 Hz', 'Beta: 12-30 Hz', 'Gamma: 30-80 Hz', 'Theta: 4-8 Hz');
-
+xlim([0 5]);
+xlabel('Frequency band');
+legend({'Lum','L-M','S'});
+set(gca,'XTick',[1 2 3 4 ] );
+set(gca,'XTickLabels',{'Theta','Alpha','Beta','Gamma'});
+%%
+figure(203)
+clear g
+%reshapedOutput=reshape(outputIncoh,[16,3,4]);
+ad.dat=reshapedOutput(:,:,[4 1 2 3]);
+ad.dat=ad.dat(:);
+ad.color=kron(ones(16,1),repmat([1,2,3],1,4));
+ad.color=ad.color(:);
+ad.band=kron(ones(16*3,1),repmat([1,2,3,4],1,1));
+ad.band=ad.band(:);
+g=gramm('x',ad.band,'y',ad.dat,'color',ad.color); % This is wrong right now..
+g.stat_boxplot();
+g.draw();
 
 %% One-Way Repeated Measures ANOVA
 

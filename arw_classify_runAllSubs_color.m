@@ -24,7 +24,7 @@ compArray=[1 1 4;4 7 7]+1;
 for thisSub=1:length(sList)
     fprintf('\nRunning subject %s : %d of %d\n',sList{thisSub},thisSub,length(sList));
     
-    dataOut(thisSub)=arw_analyseSSVEP_MM_LibSVM(sList{thisSub},1,EEGpath,1,100,compArray); 
+    dataOut(thisSub)=arw_analyseSSVEP_MM_LibSVM(sList{thisSub},1,EEGpath,0,100,compArray); 
    % subj = varargin{1};
    % processfiles = varargin{2};
    % EEGpath=varargin{3};
