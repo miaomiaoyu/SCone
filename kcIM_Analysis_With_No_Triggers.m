@@ -21,7 +21,7 @@
 
 %% General Directories (This bit never changes):
 
-clear; close all;
+clear; close all;gramm
 
  computeName=char(java.net.InetAddress.getLocalHost.getHostName);
 if strcmp(computeName,'d2') % Are we on D2?
@@ -586,16 +586,33 @@ set(gca,'XTickLabels',{'Theta','Alpha','Beta','Gamma'});
 %%
 figure(203)
 clear g
+clear ad
 %reshapedOutput=reshape(outputIncoh,[16,3,4]);
 ad.dat=reshapedOutput(:,:,[4 1 2 3]);
 ad.dat=ad.dat(:);
 ad.color=kron(ones(16,1),repmat([1,2,3],1,4));
 ad.color=ad.color(:);
-ad.band=kron(ones(16*3,1),repmat([1,2,3,4],1,1));
+ad.band=kron(ones(16*3,1),repmat([1 2 3 4],1,1));
 ad.band=ad.band(:);
-g=gramm('x',ad.band,'y',ad.dat,'color',ad.color); % This is wrong right now..
-g.stat_boxplot();
+bandList={'Theta','Alpha','Beta','Gamma',};
+for thisName=1:length(ad.band)
+    ad.bandName{thisName}=bandList{ad.band(thisName)};
+end
+
+
+g=gramm('x',ad.bandName,'y',ad.dat,'color',ad.color); % This is wrong right now..
+g.set_order_options('x',0);
+%g.stat_boxplot('notch',1);
+
+g.stat_summary('type','sem','geom','errorbar','dodge',.3)
+g.set_stat_options('alpha',.05);
+g.set_point_options('base_size',4);
+g.set_line_options('base_size',4);
+g.set_layout_options('legend_position',[.7 .5 .5 .5]);
+g.set_color_options('map',[.4 .4 .4;.8 .5 .5;.2 .6 .7]);
 g.draw();
+g.export('file_name','powerRMS.pdf','file_type','pdf');
+g.export('file_name','powerRMS.svg','file_type','svg');
 
 %% One-Way Repeated Measures ANOVA
 
